@@ -1,59 +1,58 @@
 (() => {
   "use strict";
 
-  const STORAGE_KEY = "feierabend-rechner-state";
-
   const el = {
     startTime: document.getElementById("startTime"),
     workHours: document.getElementById("workHours"),
     breakMinutes: document.getElementById("breakMinutes"),
     setNow: document.getElementById("setNow"),
+    nudgeMinus: document.getElementById("nudgeMinus"),
+    nudgePlus: document.getElementById("nudgePlus"),
     workHoursChips: document.getElementById("workHoursChips"),
     breakChips: document.getElementById("breakChips"),
     countdown: document.getElementById("countdown"),
     countdownLabel: document.getElementById("countdownLabel"),
     progressFill: document.getElementById("progressFill"),
+    progressRunner: document.getElementById("progressRunner"),
+    progressDoor: document.getElementById("progressDoor"),
+    coffeeStat: document.getElementById("coffeeStat"),
     feierabendTime: document.getElementById("feierabendTime"),
     quote: document.getElementById("quote"),
     liveClock: document.getElementById("liveClock"),
     themeToggle: document.getElementById("themeToggle"),
     soundToggle: document.getElementById("soundToggle"),
+    shareBtn: document.getElementById("shareBtn"),
     scene: document.getElementById("scene"),
     sunMoon: document.getElementById("sunMoon"),
     overtimeBox: document.getElementById("overtimeBox"),
     overtimeValue: document.getElementById("overtimeValue"),
     starsCanvas: document.getElementById("stars-canvas"),
     confettiCanvas: document.getElementById("confetti-canvas"),
+    toast: document.getElementById("toast"),
   };
 
   // ---------- State ----------
-  function loadState() {
-    const defaults = {
-      startTime: toHHMM(new Date()),
-      workHours: 8,
-      breakMinutes: 30,
-      theme: window.matchMedia?.("(prefers-color-scheme: dark)").matches ? "dark" : "light",
-      soundOn: true,
+  // Bewusst KEIN localStorage: die Seite wird von mehreren Kolleg*innen
+  // auf verschiedenen Geräten genutzt und soll bei jedem Aufruf komplett
+  // frisch starten. Einzige Ausnahme: wer explizit auf "Link teilen"
+  // klickt, bekommt einen Link mit den eigenen Werten in der URL.
+  function readParams() {
+    const params = new URLSearchParams(window.location.search);
+    const s = params.get("s");
+    const h = parseFloat(params.get("h"));
+    const b = parseFloat(params.get("b"));
+    return {
+      startTime: /^\d{2}:\d{2}$/.test(s || "") ? s : toHHMM(new Date()),
+      workHours: Number.isFinite(h) ? h : 7.8,
+      breakMinutes: Number.isFinite(b) ? b : 30,
     };
-    try {
-      const raw = localStorage.getItem(STORAGE_KEY);
-      if (!raw) return defaults;
-      const parsed = JSON.parse(raw);
-      return { ...defaults, ...parsed };
-    } catch {
-      return defaults;
-    }
   }
 
-  function saveState() {
-    try {
-      localStorage.setItem(STORAGE_KEY, JSON.stringify(state));
-    } catch {
-      /* ignore quota / privacy-mode errors */
-    }
-  }
-
-  const state = loadState();
+  const state = {
+    ...readParams(),
+    theme: window.matchMedia?.("(prefers-color-scheme: dark)").matches ? "dark" : "light",
+    soundOn: true,
+  };
   let celebrated = false;
 
   // ---------- Helpers ----------
@@ -196,6 +195,55 @@
   setInterval(() => {
     if (lastQuoteBucket) setQuoteText(pickQuote(lastQuoteBucket));
   }, 25000);
+
+  // ---------- Toast ----------
+  let toastTimer = null;
+  function showToast(text, ms = 2600) {
+    clearTimeout(toastTimer);
+    el.toast.textContent = text;
+    el.toast.classList.add("show");
+    toastTimer = setTimeout(() => el.toast.classList.remove("show"), ms);
+  }
+
+  // ---------- Coffee gimmick ----------
+  function updateCoffeeStat(elapsedMs) {
+    const minutes = Math.max(0, Math.floor(elapsedMs / 60000));
+    const count = Math.floor(minutes / 45);
+    if (minutes <= 0) {
+      el.coffeeStat.textContent = "";
+    } else if (count === 0) {
+      el.coffeeStat.textContent = "☕ Kaffee Nummer 1 wartet noch auf dich.";
+    } else {
+      el.coffeeStat.textContent = `☕ In der bisherigen Zeit wären schon ${count} Kaffeepause${count === 1 ? "" : "n"} drin gewesen.`;
+    }
+  }
+
+  // ---------- Runner / door gimmick ----------
+  function updateRunner(progress) {
+    const pct = Math.min(100, Math.max(0, progress * 100));
+    el.progressRunner.style.left = `${pct}%`;
+    const done = progress >= 1;
+    if (done && el.progressRunner.textContent !== "🎉") {
+      el.progressRunner.textContent = "🎉";
+      el.progressRunner.classList.add("done");
+    } else if (!done && el.progressRunner.textContent !== "🚶") {
+      el.progressRunner.textContent = "🚶";
+      el.progressRunner.classList.remove("done");
+    }
+    el.progressDoor.classList.toggle("open", done);
+  }
+
+  // ---------- Party easter egg ----------
+  let keyBuffer = "";
+  window.addEventListener("keydown", (e) => {
+    if (e.key.length !== 1) return;
+    keyBuffer = (keyBuffer + e.key.toLowerCase()).slice(-5);
+    if (keyBuffer === "party") {
+      spawnConfetti(260, Math.random() * 0.6 + 0.2, 0.1);
+      showToast("🥳 Party-Modus aktiviert!");
+      playChime();
+    }
+  });
 
   // ---------- Sun / sky scene ----------
   function updateScene(progress) {
@@ -367,6 +415,8 @@
 
     updateScene(progress);
     updateQuote(progress);
+    updateRunner(progress);
+    updateCoffeeStat(elapsedMs);
   }
 
   // ---------- Wiring inputs ----------
@@ -395,11 +445,19 @@
     el.soundToggle.textContent = state.soundOn ? "🔊" : "🔇";
   }
 
+  function nudgeStartTime(minutesDelta) {
+    const d = getStartDate();
+    d.setMinutes(d.getMinutes() + minutesDelta);
+    state.startTime = toHHMM(d);
+    celebrated = false;
+    applyStateToInputs();
+    tick();
+  }
+
   el.startTime.addEventListener("change", () => {
     if (!el.startTime.value) return;
     state.startTime = el.startTime.value;
     celebrated = false;
-    saveState();
     tick();
   });
 
@@ -409,7 +467,6 @@
     state.workHours = v;
     celebrated = false;
     syncChipStates();
-    saveState();
     tick();
   });
 
@@ -419,7 +476,6 @@
     state.breakMinutes = v;
     celebrated = false;
     syncChipStates();
-    saveState();
     tick();
   });
 
@@ -427,9 +483,11 @@
     state.startTime = toHHMM(new Date());
     celebrated = false;
     applyStateToInputs();
-    saveState();
     tick();
   });
+
+  el.nudgeMinus.addEventListener("click", () => nudgeStartTime(-15));
+  el.nudgePlus.addEventListener("click", () => nudgeStartTime(15));
 
   el.workHoursChips.addEventListener("click", (e) => {
     const btn = e.target.closest("button[data-hours]");
@@ -437,7 +495,6 @@
     state.workHours = Number(btn.dataset.hours);
     celebrated = false;
     applyStateToInputs();
-    saveState();
     tick();
   });
 
@@ -447,21 +504,34 @@
     state.breakMinutes = Number(btn.dataset.break);
     celebrated = false;
     applyStateToInputs();
-    saveState();
     tick();
   });
 
   el.themeToggle.addEventListener("click", () => {
     state.theme = state.theme === "dark" ? "light" : "dark";
     applyTheme();
-    saveState();
   });
 
   el.soundToggle.addEventListener("click", () => {
     state.soundOn = !state.soundOn;
     applySound();
-    saveState();
     if (state.soundOn) playChime();
+  });
+
+  el.shareBtn.addEventListener("click", async () => {
+    const params = new URLSearchParams({
+      s: state.startTime,
+      h: String(state.workHours),
+      b: String(state.breakMinutes),
+    });
+    const url = `${window.location.origin}${window.location.pathname}?${params.toString()}`;
+    try {
+      await navigator.clipboard.writeText(url);
+      showToast("🔗 Link kopiert – mit deinen Zeiten für dich oder Kolleg*innen!");
+    } catch {
+      window.prompt("Link kopieren:", url);
+    }
+    window.history.replaceState(null, "", `?${params.toString()}`);
   });
 
   window.addEventListener("resize", () => {

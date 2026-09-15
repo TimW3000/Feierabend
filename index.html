@@ -19,6 +19,7 @@
       </div>
       <div class="topbar-actions">
         <span class="live-clock" id="liveClock">--:--:--</span>
+        <button class="icon-btn" id="shareBtn" title="Eigenen Link kopieren" aria-label="Link mit diesen Einstellungen kopieren">🔗</button>
         <button class="icon-btn" id="soundToggle" title="Sound an/aus" aria-label="Sound an/aus">🔊</button>
         <button class="icon-btn" id="themeToggle" title="Hell/Dunkel" aria-label="Hell/Dunkel umschalten">🌙</button>
       </div>
@@ -37,18 +38,25 @@
       <section class="countdown-block">
         <div class="countdown-label" id="countdownLabel">bis Feierabend</div>
         <div class="countdown" id="countdown">--:--:--</div>
-        <div class="progress-track">
-          <div class="progress-fill" id="progressFill"></div>
+        <div class="progress-wrap">
+          <div class="progress-track">
+            <div class="progress-fill" id="progressFill"></div>
+          </div>
+          <div class="progress-runner" id="progressRunner">🚶</div>
+          <div class="progress-door" id="progressDoor">🚪</div>
         </div>
         <div class="sub-line" id="feierabendTime">Feierabend um --:-- Uhr</div>
         <div class="quote" id="quote">Trag deine Arbeitszeit ein und leg los ✨</div>
+        <div class="coffee-stat" id="coffeeStat"></div>
       </section>
 
       <section class="controls">
         <div class="field">
           <label for="startTime">Arbeitsbeginn</label>
           <div class="field-row">
+            <button class="chip-btn nudge" id="nudgeMinus" title="15 Minuten früher">−15m</button>
             <input type="time" id="startTime" />
+            <button class="chip-btn nudge" id="nudgePlus" title="15 Minuten später">+15m</button>
             <button class="chip-btn" id="setNow" title="Jetzt als Startzeit übernehmen">Jetzt</button>
           </div>
         </div>
@@ -62,6 +70,7 @@
             <button class="chip-btn" data-hours="6">6h</button>
             <button class="chip-btn" data-hours="7">7h</button>
             <button class="chip-btn" data-hours="7.5">7,5h</button>
+            <button class="chip-btn" data-hours="7.8">7,8h</button>
             <button class="chip-btn" data-hours="8">8h</button>
             <button class="chip-btn" data-hours="8.5">8,5h</button>
           </div>
@@ -89,8 +98,11 @@
 
     <footer class="footer">
       <span>Gebaut, weil der Feierabend es verdient hat 🍻</span>
+      <span class="footer-hint">Tipp: Diese Seite merkt sich nichts – jede·r startet frisch. Tipp "party" für eine Überraschung 🎈</span>
     </footer>
   </div>
+
+  <div class="toast" id="toast"></div>
 
   <script src="app.js"></script>
 </body>
