@@ -1006,7 +1006,11 @@
   }
 
   // ===== Modus 2: Game of Life (selbst zeichnen, Nachbarn entscheiden) =====
-  const LIFE_GRID = 22;
+  // Die Zellenzahl richtet sich nach der verfügbaren Fläche (Zielgröße
+  // ~16px/Zelle): ein größeres Fenster gibt dem Spiel mehr Raum zum
+  // Entwickeln (mehr Zellen), statt nur die einzelnen Pixel zu vergrößern.
+  const LIFE_TARGET_CELL_PX = 16;
+  let LIFE_GRID = 22;
   const LIFE_STEP_S = 0.35;
   let lifeCells = new Uint8Array(LIFE_GRID * LIFE_GRID);
   let lifeStepAccum = 0;
@@ -1014,7 +1018,13 @@
   let lifePointerActive = false;
   let lifeDrawValue = 1;
 
+  function computeLifeGridSize() {
+    const avail = Math.min(pipW, pipH) * 0.86;
+    return clampNum(Math.round(avail / LIFE_TARGET_CELL_PX), 16, 56);
+  }
+
   function seedLifeRandom() {
+    LIFE_GRID = computeLifeGridSize();
     lifeCells = new Uint8Array(LIFE_GRID * LIFE_GRID);
     for (let i = 0; i < lifeCells.length; i++) lifeCells[i] = Math.random() < 0.24 ? 1 : 0;
     lifeStepAccum = 0;
@@ -1269,6 +1279,7 @@
     resizePipCanvas();
     if (pipMode === "shapes") setPixelShape(pixelShapeIndex);
     else if (pipMode === "sierpinski") setupSierpinski(SIER_VARIANTS[sierVariantIdx]);
+    else if (pipMode === "life" && computeLifeGridSize() !== LIFE_GRID) seedLifeRandom();
   });
 
   // ---------- Init ----------

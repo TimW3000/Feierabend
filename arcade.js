@@ -329,27 +329,28 @@
   //     Baum entfernt und neu eingefügt (stärkeres Signal als visibility).
   //  3) ein kurzer, deutlich sichtbarer Vollflächen-Flash auf dem Canvas
   //     selbst erzeugt einen echten, unübersehbaren Pixel-Unterschied.
+  // WICHTIG: display:none setzen und im selben Tick wieder zurücknehmen
+  // (mit nur einem offsetHeight-Read dazwischen) erzeugt NIE einen
+  // tatsächlich gemalten Frame -- der Browser painted erst, wenn der
+  // JS-Task zu Ende ist, und zu dem Zeitpunkt ist der Canvas schon
+  // längst wieder sichtbar. Das war der Fehler in der letzten Version:
+  // ein reiner Reflow (offsetHeight) erzwingt Layout, aber kein Paint.
+  // Für Citrix/RDP muss wirklich ein Frame mit ausgeblendetem Canvas
+  // gerendert UND übertragen werden, bevor er wieder erscheint -- das
+  // geht nur über echte requestAnimationFrame-Pausen dazwischen.
   function nudgeCanvasRepaint() {
-    canvas.width = canvas.width;
-
-    gameWrap.style.display = "none";
-    void gameWrap.offsetHeight;
-    gameWrap.style.display = "";
-
-    ctx.save();
-    ctx.fillStyle = "#ffffff";
-    ctx.fillRect(0, 0, canvas.width, canvas.height);
-    ctx.restore();
-
+    canvas.width = canvas.width; // Bitmap komplett neu erzeugen
+    canvas.style.display = "none";
     requestAnimationFrame(function () {
-      gameWrap.style.display = "none";
-      void gameWrap.offsetHeight;
-      gameWrap.style.display = "";
-      ctx.clearRect(0, 0, canvas.width, canvas.height);
+      // hier wurde bereits ein Frame OHNE Canvas gemalt/übertragen
+      canvas.style.display = "";
       requestAnimationFrame(function () {
-        gameWrap.style.display = "none";
-        void gameWrap.offsetHeight;
-        gameWrap.style.display = "";
+        // jetzt ein Frame MIT (leerem) Canvas -- garantiert neuer Inhalt
+        ctx.fillStyle = "#ffffff";
+        ctx.fillRect(0, 0, canvas.width, canvas.height);
+        requestAnimationFrame(function () {
+          ctx.clearRect(0, 0, canvas.width, canvas.height);
+        });
       });
     });
   }
