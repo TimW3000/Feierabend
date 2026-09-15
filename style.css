@@ -81,7 +81,7 @@ img { max-width: 100%; }
   display: flex;
   flex-direction: column;
   align-items: center;
-  max-width: 1320px;
+  max-width: 1480px;
   margin: 0 auto;
 }
 
@@ -110,21 +110,25 @@ img { max-width: 100%; }
   order: 1;
 }
 
-@media (min-width: 1240px) {
+/* Ab hier Drei-Spalten-Layout. Bewusst niedrige Schwelle (880px statt
+   vorher 1240px), damit es auf normalen Laptop-/Desktop-Fenstern
+   tatsächlich greift und nicht nur auf sehr breiten Screens. CSS Grid
+   mit minmax() statt fixer Breiten: beide Seitenspalten sind IMMER
+   exakt gleich breit (gleiche minmax-Werte) und wachsen auf breiten
+   Screens automatisch mit, statt bei 320px gedeckelt zu bleiben. */
+@media (min-width: 960px) {
   .page {
-    flex-direction: row;
-    align-items: flex-start;
+    display: grid;
+    grid-template-columns: minmax(260px, 460px) minmax(320px, 560px) minmax(260px, 460px);
+    align-items: start;
     justify-content: center;
-    gap: 20px;
+    gap: 18px;
   }
-  .app { margin: 0; }
-  /* Beide Seitenspalten exakt gleich breit UND gleich hoch (volle
-     Viewport-Höhe), damit Animations- und Spiele-Fenster symmetrisch
-     wirken statt unterschiedlich groß. */
+  .app { margin: 0; width: auto; max-width: none; }
   .pip-aside,
   .arcade-aside {
-    flex: 0 0 320px;
-    max-width: 320px;
+    width: auto;
+    max-width: none;
     padding: 20px 0;
     position: sticky;
     top: 20px;
