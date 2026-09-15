@@ -36,30 +36,57 @@
         </svg>
       </section>
 
-      <section class="countdown-block">
-        <div class="countdown-label" id="countdownLabel">bis Feierabend</div>
-        <div class="countdown" id="countdown">--:--:--</div>
-        <div class="progress-wrap">
-          <div class="progress-track">
-            <div class="progress-fill" id="progressFill"></div>
+      <section class="timer-row">
+        <div class="countdown-block">
+          <div class="countdown-label" id="countdownLabel">bis Feierabend</div>
+          <div class="countdown" id="countdown">--:--:--</div>
+          <div class="progress-wrap">
+            <div class="progress-track">
+              <div class="progress-fill" id="progressFill"></div>
+            </div>
+            <div class="progress-runner" id="progressRunner">🚶</div>
+            <div class="progress-door" id="progressDoor">🚪</div>
           </div>
-          <div class="progress-runner" id="progressRunner">🚶</div>
-          <div class="progress-door" id="progressDoor">🚪</div>
+          <div class="sub-line" id="feierabendTime">Feierabend um --:-- Uhr</div>
+          <div class="quote" id="quote">Trag deine Arbeitszeit ein und leg los ✨</div>
+          <div class="coffee-stat" id="coffeeStat"></div>
+          <div class="fun-fact" id="funFact"></div>
         </div>
-        <div class="sub-line" id="feierabendTime">Feierabend um --:-- Uhr</div>
-        <div class="quote" id="quote">Trag deine Arbeitszeit ein und leg los ✨</div>
-        <div class="coffee-stat" id="coffeeStat"></div>
-        <div class="fun-fact" id="funFact"></div>
+
+        <div class="pip-dock" id="pipDock">
+          <div class="pip-header">
+            <span>🎬 PiP</span>
+            <button class="pip-close" id="pipClose" aria-label="Video schließen" hidden>✕</button>
+          </div>
+          <div class="pip-body" id="pipBody">
+            <div class="pip-placeholder">📱<br>Link einfügen<br>⬇️</div>
+          </div>
+        </div>
       </section>
+
+      <form class="pip-form" id="pipForm">
+        <input type="url" id="pipUrlInput" placeholder="TikTok- oder YouTube-Link einfügen…" inputmode="url" autocomplete="off" />
+        <button class="chip-btn" type="submit">▶️ Play</button>
+      </form>
 
       <section class="controls">
         <div class="field">
           <label for="startTime">Arbeitsbeginn</label>
           <div class="field-row">
-            <button class="chip-btn nudge" id="nudgeMinus" title="15 Minuten früher">−15m</button>
             <input type="time" id="startTime" />
-            <button class="chip-btn nudge" id="nudgePlus" title="15 Minuten später">+15m</button>
             <button class="chip-btn" id="setNow" title="Jetzt als Startzeit übernehmen">Jetzt</button>
+          </div>
+          <div class="nudge-row" id="nudgeRow">
+            <div class="nudge-group">
+              <button class="chip-btn nudge" data-nudge="-60" title="1 Stunde früher">−1h</button>
+              <button class="chip-btn nudge" data-nudge="-5" title="5 Minuten früher">−5m</button>
+              <button class="chip-btn nudge" data-nudge="-1" title="1 Minute früher">−1m</button>
+            </div>
+            <div class="nudge-group">
+              <button class="chip-btn nudge" data-nudge="1" title="1 Minute später">+1m</button>
+              <button class="chip-btn nudge" data-nudge="5" title="5 Minuten später">+5m</button>
+              <button class="chip-btn nudge" data-nudge="60" title="1 Stunde später">+1h</button>
+            </div>
           </div>
         </div>
 
@@ -98,7 +125,7 @@
       </section>
 
       <section class="brainrot">
-        <div class="brainrot-label">🧠💀 Kurz Hirn aus?</div>
+        <div class="brainrot-label">🧠💀 Video suchen, Link kopieren, oben einfügen:</div>
         <div class="chips">
           <a class="chip-btn brainrot-link" href="https://www.tiktok.com/" target="_blank" rel="noopener noreferrer">TikTok 🎵</a>
           <a class="chip-btn brainrot-link" href="https://www.youtube.com/shorts" target="_blank" rel="noopener noreferrer">YT Shorts ▶️</a>

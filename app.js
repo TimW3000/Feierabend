@@ -6,8 +6,7 @@
     workHours: document.getElementById("workHours"),
     breakMinutes: document.getElementById("breakMinutes"),
     setNow: document.getElementById("setNow"),
-    nudgeMinus: document.getElementById("nudgeMinus"),
-    nudgePlus: document.getElementById("nudgePlus"),
+    nudgeRow: document.getElementById("nudgeRow"),
     workHoursChips: document.getElementById("workHoursChips"),
     breakChips: document.getElementById("breakChips"),
     countdown: document.getElementById("countdown"),
@@ -24,6 +23,11 @@
     soundToggle: document.getElementById("soundToggle"),
     shareBtn: document.getElementById("shareBtn"),
     chaosBtn: document.getElementById("chaosBtn"),
+    pipDock: document.getElementById("pipDock"),
+    pipBody: document.getElementById("pipBody"),
+    pipForm: document.getElementById("pipForm"),
+    pipUrlInput: document.getElementById("pipUrlInput"),
+    pipClose: document.getElementById("pipClose"),
     scene: document.getElementById("scene"),
     sunMoon: document.getElementById("sunMoon"),
     overtimeBox: document.getElementById("overtimeBox"),
@@ -152,6 +156,28 @@
       "Dein Kaffee ist heißer als deine Motivation gerade. ☕🔥",
       "Der Grind hat begonnen. Möge er gnädig sein. 🙏",
       "Noch total main character, gleich schon NPC im Meeting. 🎭",
+      "Deine Willenskraft ist noch ungeöffnet wie eine neue Chipstüte. 🥔",
+      "Board Meeting mit dir selbst: Tagesordnungspunkt 1 – aufwachen. ☕",
+      "Dein Kaffee kühlt schneller ab als deine Motivation steigt. ☕📉",
+      "Noch ist der Tag ein leeres Google Doc. Frisch, unschuldig, voller Potenzial. 📄",
+      "Dein Hirn: 'Lass uns produktiv sein.' Auch dein Hirn: 'Lass uns nicht.' 🧠⚖️",
+      "Frühform: 20% wach, 80% Kaffee-Vorfreude. ☕🔋",
+      "Dein erster Blick auf die To-Do-Liste war schon ein kleines Trauma. 😳",
+      "Der Arbeitstag lädt... bitte etwas Geduld, Buffering. 🔄",
+      "Noch riecht alles nach frisch gedrucktem Optimismus. 🖨️✨",
+      "Deine Tastatur ist wärmer als dein Ehrgeiz gerade. ⌨️🔥",
+      "POV: Du tust so, als hättest du einen Plan für heute. 🎭",
+      "Inbox Zero ist ein Mythos. Wie Einhörner. Oder Motivation vor 9 Uhr. 🦄",
+      "Dein Stuhl heißt dich willkommen zurück in die Realität. 🪑👋",
+      "Der Tag hat 1000 Möglichkeiten. Du hast 1 Kaffee. Balance it. ☕⚖️",
+      "Noch fühlst du dich wie ein NPC, der auf seinen Questgeber wartet. 🎮",
+      "Dein Optimismus-Akku ist voll. Realität lädt in 3... 2... 1... 🔋💥",
+      "Erste E-Mail geöffnet. Reue bereits spürbar. 📧😩",
+      "Der Tag ist wie ein leeres Excel-Tab: unendlich Möglichkeiten, null Motivation. 📊",
+      "Frisch reingekommen und schon am Fenster nach Feierabend Ausschau halten. 🪟👀",
+      "Dein Gehirn braucht noch ein Software-Update. Bitte warten. ⏳💻",
+      "Ein neuer Tag, dieselben Ausreden. Klassiker halt. 🔁",
+      "Kaffee Nummer eins: Formsache. Kaffee Nummer zwei: Notwendigkeit. ☕☕",
     ],
     mid: [
       "Halbzeit-Gefühl. Weiter geht's. 🚶",
@@ -178,6 +204,30 @@
       "Kleine Pause, große Wirkung. Vielleicht. 🧘",
       "Brainrot-Level steigt exponentiell mit jeder Stunde im Büro. 📈🧠",
       "Halb geschafft, halb am Verzweifeln, ganz normal. 🙃",
+      "Fokus wie ein Goldfisch mit ADHS. 🐠",
+      "Dein Gehirn hat gerade einen Tab zu viel offen. 🗂️",
+      "Zwischen 'noch produktiv' und 'schon am Abdriften' liegt genau diese Minute. ⏱️",
+      "Deine Snackpause hat eine eigene Pause verdient. 🍫",
+      "Mid-Day-Brainfog: dichter als der Nebel draußen. 🌫️",
+      "Motivation im Standby-Modus. Reaktivierung unklar. 🔌",
+      "Dein drittes Wasserglas heute. Hydration: König. 💧👑",
+      "Gedanklich schon im Feierabend, körperlich noch im Meeting. 🧠✈️🏢",
+      "Zeit für den heimlichen Blick aufs Handy Nummer 47 heute. 📱",
+      "Deine Tastatur klingt schon genervter als du. ⌨️😤",
+      "Fokus: verloren. Suchtrupp: unterwegs. 🔦",
+      "Der Nachmittag zieht sich wie Kaugummi. 🍬",
+      "Innerlich schon am Ausstempeln, äußerlich noch am Tippen. ⌨️🚪",
+      "Deine Tasse ist leer. Deine Geduld auch. Zufall? 🤔",
+      "Mid-Tag-Motivation: geliehen, nicht gekauft. 💸",
+      "Die Uhr bewegt sich in Zeitlupe. Absichtlich, vermutlich. 🐌🕐",
+      "Dein Tatendrang hat sich in die Kaffeeküche verabschiedet. 🚪☕",
+      "Noch 1000 Gedanken an Feierabend, 0 Gedanken an die Deadline. 💭",
+      "Deine Produktivitätskurve macht gerade eine Mittagspause. 📉",
+      "Zwischen Meeting Nummer 2 und 3 liegt nur noch Hoffnung. 🙏",
+      "Dein Energy-Drink war eine Notlüge an dich selbst. 🥤",
+      "Mid-Tag-Realness: Kaffee kalt, Motivation kälter. ☕🧊",
+      "Der Nachmittag hat dich, nicht andersrum. 😮‍💨",
+      "Deine Augen sagen 'Pause', dein Kalender sagt 'nein'. 👀📅",
     ],
     late: [
       "Es riecht schon nach Feierabend! 👃",
@@ -204,6 +254,30 @@
       "Fühlt sich an wie der letzte Kilometer eines Marathons, den keiner gefragt hat. 🏃",
       "Dein Gehirn checkt schon aus, dein Körper sitzt noch da. 🧠💨",
       "Bald heißt's: Tür zu, Kopf frei. 🚪🧘",
+      "Feierabend-Vibes infiltrieren bereits dein Gehirn. 🧠📡",
+      "Deine innere Uhr tickt lauter als die echte. ⏰",
+      "Der letzte Espresso des Tages: rein taktisch. ☕🎯",
+      "Fast geschafft, Energy-Reserven auf Notfall-Modus. 🔋🆘",
+      "Deine Jacke flirtet schon mit der Garderobe. 🧥😏",
+      "Kurz vorm Rausrennen, aber gepflegt bleiben. 🏃‍♀️✨",
+      "Der Feierabend hat sich schon angekündigt wie ein Paket-Tracking. 📦",
+      "Deine To-Do-Liste akzeptiert jetzt nur noch 'morgen'. 📝➡️📅",
+      "Fast im Ziel, Beine schon auf Autopilot Richtung Tür. 🚶‍♂️🚪",
+      "Letzte Runde: Konzentration auf Sparflamme. 🔥➡️💧",
+      "Dein Hirn hat schon den Feierabend-Song ausgesucht. 🎧",
+      "Fast durch, Motivation läuft auf Fumes. ⛽",
+      "Der Endgegner heißt 'letzte ungelesene Nachricht'. 👾",
+      "Deine Laune steigt proportional zur sinkenden Uhrzeit. 📈⏰",
+      "Kurz vorm Feierabend-Sprint, bitte anschnallen. 🎢",
+      "Fast geschafft, innerlich schon am Jubeln. 🎉🤫",
+      "Der letzte Blick in den Kalender: bitte keine Überraschungen mehr. 🙏📅",
+      "Deine Energie ist im Sparmodus, dein Optimismus nicht. 🔋✨",
+      "Fast Feierabend, deine Gedanken sind schon auf der Couch. 🛋️💭",
+      "Der Tag neigt sich, deine Geduld auch, aber knapp reicht's noch. ⚖️",
+      "Letzte Meile, aber mit Stil. 💅🏁",
+      "Feierabend-Antizipation auf Rekordniveau. 📊🎉",
+      "Fast da, bitte keine 'kurze Frage' mehr reinlassen. 🙅‍♀️",
+      "Dein Blick geht öfter zur Tür als zum Bildschirm. 🚪👀",
     ],
     almost: [
       "Gleich ist Schluss – halt durch! 🔥",
@@ -226,6 +300,26 @@
       "Letzter Blick auf die Uhr, dann ist es geschafft. 👁️🕐",
       "Fast im Ziel-Bereich – bitte nicht stolpern. 🏃‍♀️",
       "Kurz vorm Abpfiff. Bleib fokussiert, Champion. 🏆",
+      "Letzte Sekunden, Herzschlag synchronisiert sich mit der Uhr. 💓⏱️",
+      "Fast geschafft, bloß jetzt nicht stolpern über eine Last-Minute-Anfrage. 🪤",
+      "Der Cursor blinkt schon ungeduldiger als du. 🖱️",
+      "Gleich ist es soweit, Gänsehaut Teil 2. 🥶✨",
+      "Deine Finger zittern leicht vor Vorfreude. Oder Koffein. Beides gültig. ☕🤲",
+      "Fast am Ziel, bitte nicht jetzt einschlafen vor Anspannung. 😴",
+      "Letzte Minuten fühlen sich an wie ein Cliffhanger-Serienfinale. 📺",
+      "Fast durch, dein innerer Countdown-Sprecher übernimmt. 🎙️",
+      "So kurz davor, dass sogar die Uhr nervös wirkt. ⏰😬",
+      "Gleich geht's los: Operation Feierabend, finale Phase. 🎯",
+      "Fast geschafft, bitte Ruhe bewahren trotz Adrenalin. 🧘‍♂️⚡",
+      "Letzter Cut, dann ist der Film vorbei. 🎬",
+      "So nah dran, dass man schon die Couch riechen kann. 🛋️👃",
+      "Fast im Ziel, Feuerwerk der Vorfreude wird gezündet. 🎆",
+      "Gleich ist Zapfenstreich für den Arbeitstag. 🪖",
+      "Letzte Sekunden ticken lauter als je zuvor. ⏱️🔊",
+      "Fast da, bitte keine Überstunden-Falle mehr reintreten. 🪤",
+      "So kurz vorm Abpfiff, Nerven bitte zusammenhalten. 🥅",
+      "Gleich ist es geschafft, innerlich schon Konfetti am werfen. 🎊",
+      "Letzte Meter, Zielband schon in Sicht. 🏁",
     ],
     done: [
       "Feierabend! Zeit, den Laptop zuzuklappen. 🎉",
@@ -246,6 +340,24 @@
       "Ab in den Feierabend-Flow. Kein Zurück mehr. 🌊",
       "Du bist raus. Genieß den Rest vom Tag. 🚪✨",
       "Feierabend: erreicht, gefeiert, verdient. 🥳",
+      "Feierabend erreicht. Zeit für den offiziellen Serotonin-Tanz. 💃",
+      "Geschafft! Dein Stuhl vermisst dich schon jetzt nicht. 🪑👋",
+      "Ab jetzt regiert die Couch. Uneingeschränkt. 🛋️👑",
+      "Feierabend confirmed. Bildschirm aus, Leben an. 📺➡️🌳",
+      "Du hast gewonnen. Der Preis: Ruhe. Genieß ihn. 🏆😌",
+      "Offiziell raus aus dem Grind, rein ins Nichtstun. ⛏️➡️🛋️",
+      "Feierabend: geladen, gespeichert, genossen. 💾",
+      "Deine Verantwortung hat Feierabend. Deine Snacks nicht. 🍕",
+      "Der Tag hat kapituliert. Du hast gewonnen. 🏳️",
+      "Jetzt zählt nur noch: Serie, Snacks, Stille. 📺🍿🤫",
+      "Feierabend-Modus: vollständig hochgefahren. 🚀",
+      "Du bist raus aus der Matrix für heute. 💊",
+      "Geschafft. Applaus, Konfetti, innerer Frieden. 🎊☮️",
+      "Der Grind ruht. Du auch, hoffentlich. 😴",
+      "Feierabend: der beste Teil vom Tag, offiziell bestätigt. ✅",
+      "Ab jetzt gehört die Zeit dir. Nutze sie mit Stil. ✨",
+      "Bildschirm zu, Kopf frei, Feierabend-Glück aktiviert. 🧠🕊️",
+      "Du hast überlebt. Feiere das, wie es sich gehört. 🥳",
     ],
   };
 
@@ -286,7 +398,7 @@
 
   setInterval(() => {
     if (lastQuoteBucket) setQuoteText(pickQuote(lastQuoteBucket));
-  }, 60000);
+  }, 15000);
 
   // ---------- Fun Facts (drumherum-Fakten, unabhängig vom Fortschritt) ----------
   const FUN_FACTS = [
@@ -662,8 +774,11 @@
     tick();
   });
 
-  el.nudgeMinus.addEventListener("click", () => nudgeStartTime(-15));
-  el.nudgePlus.addEventListener("click", () => nudgeStartTime(15));
+  el.nudgeRow.addEventListener("click", (e) => {
+    const btn = e.target.closest("button[data-nudge]");
+    if (!btn) return;
+    nudgeStartTime(Number(btn.dataset.nudge));
+  });
 
   el.workHoursChips.addEventListener("click", (e) => {
     const btn = e.target.closest("button[data-hours]");
@@ -693,6 +808,94 @@
     applySound();
     if (state.soundOn) playChime();
   });
+
+  // ---------- PiP-Player (Brainrot-Pause direkt neben dem Timer) ----------
+  function parseVideoUrl(raw) {
+    let str = (raw || "").trim();
+    if (!str) return null;
+    if (!/^https?:\/\//i.test(str)) str = `https://${str}`;
+    let u;
+    try {
+      u = new URL(str);
+    } catch {
+      return null;
+    }
+    const host = u.hostname.replace(/^www\.|^m\./, "");
+
+    if (host === "youtube.com" || host === "youtube-nocookie.com") {
+      if (u.pathname.startsWith("/shorts/")) {
+        const id = u.pathname.split("/")[2];
+        if (id) return { type: "youtube", id, wide: false };
+      }
+      const vId = u.searchParams.get("v");
+      if (vId) return { type: "youtube", id: vId, wide: true };
+      const embedMatch = u.pathname.match(/^\/embed\/([\w-]+)/);
+      if (embedMatch) return { type: "youtube", id: embedMatch[1], wide: true };
+    }
+    if (host === "youtu.be") {
+      const id = u.pathname.slice(1).split("/")[0];
+      if (id) return { type: "youtube", id, wide: true };
+    }
+    if (host === "tiktok.com" || host.endsWith(".tiktok.com")) {
+      return { type: "tiktok", url: u.toString(), wide: false };
+    }
+    return null;
+  }
+
+  let tiktokScriptEl = null;
+  function ensureTikTokScript() {
+    if (tiktokScriptEl) tiktokScriptEl.remove();
+    tiktokScriptEl = document.createElement("script");
+    tiktokScriptEl.src = "https://www.tiktok.com/embed.js";
+    tiktokScriptEl.async = true;
+    document.body.appendChild(tiktokScriptEl);
+  }
+
+  function renderPip(parsed) {
+    el.pipBody.innerHTML = "";
+    el.pipBody.classList.toggle("wide", !!parsed.wide);
+    el.pipDock.classList.toggle("pip-wide-content", parsed.type === "tiktok");
+
+    if (parsed.type === "youtube") {
+      const iframe = document.createElement("iframe");
+      iframe.src = `https://www.youtube-nocookie.com/embed/${parsed.id}?autoplay=1&mute=1&playsinline=1`;
+      iframe.allow = "autoplay; encrypted-media; picture-in-picture; fullscreen";
+      iframe.allowFullscreen = true;
+      iframe.referrerPolicy = "strict-origin-when-cross-origin";
+      el.pipBody.appendChild(iframe);
+    } else if (parsed.type === "tiktok") {
+      const bq = document.createElement("blockquote");
+      bq.className = "tiktok-embed";
+      bq.setAttribute("cite", parsed.url);
+      const a = document.createElement("a");
+      a.href = parsed.url;
+      a.textContent = "TikTok-Video";
+      bq.appendChild(a);
+      el.pipBody.appendChild(bq);
+      ensureTikTokScript();
+    }
+    el.pipClose.hidden = false;
+  }
+
+  function closePip() {
+    el.pipBody.innerHTML = '<div class="pip-placeholder">📱<br>Link einfügen<br>⬇️</div>';
+    el.pipBody.classList.remove("wide");
+    el.pipDock.classList.remove("pip-wide-content");
+    el.pipClose.hidden = true;
+  }
+
+  el.pipForm.addEventListener("submit", (e) => {
+    e.preventDefault();
+    const parsed = parseVideoUrl(el.pipUrlInput.value);
+    if (!parsed) {
+      showToast("🤷 Link nicht erkannt – TikTok- oder YouTube-/Shorts-Link einfügen.");
+      return;
+    }
+    renderPip(parsed);
+    el.pipUrlInput.value = "";
+  });
+
+  el.pipClose.addEventListener("click", closePip);
 
   el.shareBtn.addEventListener("click", async () => {
     const params = new URLSearchParams({

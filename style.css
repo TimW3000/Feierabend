@@ -199,6 +199,130 @@ img { max-width: 100%; }
   filter: drop-shadow(0 0 10px rgba(180, 190, 255, 0.85));
 }
 
+/* --- Timer row + PiP dock --- */
+.timer-row {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 14px;
+  flex-wrap: wrap;
+}
+.timer-row .countdown-block {
+  width: 100%;
+}
+.timer-row .pip-dock {
+  align-self: center;
+  width: 170px;
+}
+
+@media (min-width: 520px) {
+  .timer-row {
+    flex-direction: row;
+    align-items: stretch;
+  }
+  .timer-row .countdown-block {
+    flex: 1 1 0;
+    min-width: 0;
+    width: auto;
+  }
+  .timer-row .pip-dock {
+    flex: 0 0 150px;
+    align-self: stretch;
+    width: 150px;
+  }
+  .timer-row .pip-dock.pip-wide-content {
+    flex-basis: 100%;
+    width: 100%;
+    align-self: center;
+    max-width: 340px;
+  }
+}
+
+.pip-dock {
+  border: 1px solid var(--card-border);
+  border-radius: 14px;
+  background: var(--chip-bg);
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+  transition: max-width 0.3s ease, flex-basis 0.3s ease;
+}
+.pip-dock .pip-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 5px 8px;
+  font-size: 0.68rem;
+  font-weight: 700;
+  color: var(--text-2);
+  letter-spacing: 0.03em;
+}
+.pip-close {
+  border: none;
+  background: transparent;
+  cursor: pointer;
+  font-size: 0.85rem;
+  color: var(--text-muted);
+  padding: 2px 4px;
+  line-height: 1;
+}
+.pip-close:hover { color: var(--text-1); }
+
+.pip-body {
+  flex: 1;
+  position: relative;
+  aspect-ratio: 9 / 16;
+  background: #0b0b12;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  overflow: auto;
+}
+.pip-body.wide { aspect-ratio: 16 / 9; }
+.pip-body iframe {
+  width: 100%;
+  height: 100%;
+  border: 0;
+  display: block;
+}
+.pip-body blockquote.tiktok-embed {
+  margin: 0 !important;
+  width: 100% !important;
+  min-width: 0 !important;
+  max-width: 100% !important;
+}
+.pip-placeholder {
+  color: rgba(255, 255, 255, 0.55);
+  font-size: 0.7rem;
+  text-align: center;
+  line-height: 1.6;
+  padding: 10px;
+}
+
+.pip-form {
+  display: flex;
+  gap: 8px;
+  margin-top: -8px;
+}
+.pip-form input {
+  flex: 1;
+  font-family: var(--font-sans);
+  font-size: 0.85rem;
+  padding: 9px 12px;
+  border-radius: 12px;
+  border: 1px solid var(--card-border);
+  background: var(--chip-bg);
+  color: var(--text-1);
+  outline: none;
+  min-width: 0;
+  transition: box-shadow 0.2s ease, border 0.2s ease;
+}
+.pip-form input:focus {
+  box-shadow: 0 0 0 3px color-mix(in srgb, var(--accent) 35%, transparent);
+  border-color: var(--accent);
+}
+.pip-form button { flex: 0 0 auto; }
+
 /* --- Countdown --- */
 .countdown-block {
   text-align: center;
@@ -393,11 +517,21 @@ input::-webkit-calendar-picker-indicator { cursor: pointer; opacity: 0.7; }
   flex: 0 0 auto;
 }
 
+.nudge-row {
+  display: flex;
+  justify-content: space-between;
+  gap: 8px;
+}
+.nudge-group {
+  display: flex;
+  gap: 6px;
+}
 .chip-btn.nudge {
-  flex: 0 0 auto;
+  flex: 1 1 auto;
   font-family: var(--font-mono);
-  font-size: 0.75rem;
-  padding: 7px 9px;
+  font-size: 0.72rem;
+  padding: 7px 8px;
+  min-width: 0;
 }
 
 /* --- Overtime --- */
