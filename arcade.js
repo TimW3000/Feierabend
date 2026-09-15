@@ -319,16 +319,38 @@
   // Citrix/RDP-Fix: Über manche Remote-Desktop-Protokolle wird der erste
   // Canvas-Frame nach dem Ausblenden der Overlays nicht als "geänderter
   // Bereich" erkannt und bleibt schwarz, bis irgendeine echte DOM-Änderung
-  // (z.B. ein Overlay-Wechsel) einen Repaint erzwingt. Ein kurzes
-  // Sichtbarkeits-Flackern auf dem Canvas selbst reicht dafür schon aus.
+  // einen Repaint erzwingt -- genau das passiert zufällig beim "Neustarten"
+  // (Overlay-Wechsel), aber nicht beim allerersten "Starten". Ein reiner
+  // visibility-Toggle auf dem Canvas reicht dafür offenbar nicht; hier ein
+  // deutlich härterer Ansatz:
+  //  1) canvas.width/height nochmal exakt im Moment des Sichtbarwerdens
+  //     neu setzen -> das leert & erzeugt die Bitmap komplett neu.
+  //  2) der komplette Wrapper wird kurz per display:none aus dem Render-
+  //     Baum entfernt und neu eingefügt (stärkeres Signal als visibility).
+  //  3) ein kurzer, deutlich sichtbarer Vollflächen-Flash auf dem Canvas
+  //     selbst erzeugt einen echten, unübersehbaren Pixel-Unterschied.
   function nudgeCanvasRepaint() {
-    canvas.style.visibility = "hidden";
-    void canvas.offsetHeight;
-    canvas.style.visibility = "visible";
+    canvas.width = canvas.width;
+
+    gameWrap.style.display = "none";
+    void gameWrap.offsetHeight;
+    gameWrap.style.display = "";
+
+    ctx.save();
+    ctx.fillStyle = "#ffffff";
+    ctx.fillRect(0, 0, canvas.width, canvas.height);
+    ctx.restore();
+
     requestAnimationFrame(function () {
-      canvas.style.visibility = "hidden";
-      void canvas.offsetHeight;
-      canvas.style.visibility = "visible";
+      gameWrap.style.display = "none";
+      void gameWrap.offsetHeight;
+      gameWrap.style.display = "";
+      ctx.clearRect(0, 0, canvas.width, canvas.height);
+      requestAnimationFrame(function () {
+        gameWrap.style.display = "none";
+        void gameWrap.offsetHeight;
+        gameWrap.style.display = "";
+      });
     });
   }
 
@@ -338,8 +360,8 @@
     screen = "playing";
     lastTs = 0;
     showOnly(null);
-    requestAnimationFrame(loop);
     nudgeCanvasRepaint();
+    requestAnimationFrame(loop);
   }
 
   function endRun(score) {
@@ -373,8 +395,8 @@
     screen = "playing";
     showOnly(null);
     lastTs = 0;
-    requestAnimationFrame(loop);
     nudgeCanvasRepaint();
+    requestAnimationFrame(loop);
   }
 
   startBtn.addEventListener("click", startRun);

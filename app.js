@@ -901,7 +901,7 @@
         else if (dir === "right") axisPos = N - 1 - x;
         else if (dir === "top") axisPos = y;
         else axisPos = N - 1 - y;
-        cells.push({ x, y, dist: axisPos + Math.random() * 2.2 });
+        cells.push({ x, y, dist: axisPos + Math.random() * 1.1 });
       }
     }
     cells.sort((a, b) => a.dist - b.dist);
@@ -910,7 +910,7 @@
     return cells;
   }
 
-  const ASSEMBLE_S = 2.0, HOLD_S = 1.3, DISASSEMBLE_S = 1.6, GAP_S = 0.3;
+  const ASSEMBLE_S = 5.5, HOLD_S = 2.2, DISASSEMBLE_S = 3.5, GAP_S = 0.4;
   const CYCLE_S = ASSEMBLE_S + HOLD_S + DISASSEMBLE_S + GAP_S;
 
   let pixelShapeIndex = -1;
@@ -961,7 +961,7 @@
       // Beim Zusammensetzen kommt zuerst dran, wer nahe an der Einflugkante
       // liegt (order klein); beim Auflösen fliegt zuerst wieder raus, wer
       // zuletzt kam -> alles läuft zurück zum selben Rand.
-      const localWindow = 0.3;
+      const localWindow = 0.1;
       let cellProgress;
       if (phase === "hold") cellProgress = 1;
       else if (phase === "gap") cellProgress = 0;
