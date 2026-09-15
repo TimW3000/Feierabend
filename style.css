@@ -118,19 +118,34 @@ img { max-width: 100%; }
     gap: 20px;
   }
   .app { margin: 0; }
-  .pip-aside {
-    flex: 0 0 290px;
-    max-width: 290px;
-    padding: 28px 0 40px;
-    position: sticky;
-    top: 20px;
-  }
+  /* Beide Seitenspalten exakt gleich breit UND gleich hoch (volle
+     Viewport-Höhe), damit Animations- und Spiele-Fenster symmetrisch
+     wirken statt unterschiedlich groß. */
+  .pip-aside,
   .arcade-aside {
     flex: 0 0 320px;
     max-width: 320px;
-    padding: 28px 0 40px;
+    padding: 20px 0;
     position: sticky;
     top: 20px;
+    height: calc(100vh - 40px);
+    min-height: 0;
+    display: flex;
+    flex-direction: column;
+  }
+  .pip-dock,
+  .mini-arcade {
+    height: 100%;
+    min-height: 0;
+  }
+  .mini-arcade {
+    display: flex;
+    flex-direction: column;
+  }
+  .pip-body {
+    aspect-ratio: unset;
+    flex: 1;
+    min-height: 0;
   }
 }
 
