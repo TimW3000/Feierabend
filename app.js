@@ -882,38 +882,48 @@
     return mask;
   }
 
-  // Reihenfolge, in der die Pixel erscheinen: von der Mitte nach außen,
-  // mit etwas Zufalls-Jitter, damit es organisch statt starr wirkt.
-  function buildRevealOrder(mask) {
+  // Reihenfolge + Einflugrichtung: die Pixel fliegen als Schwarm von einer
+  // Kante rein (links/oben/rechts/unten, wechselt pro Motiv) und setzen
+  // sich wellenartig von dieser Kante her zusammen; beim Auflösen fliegen
+  // sie exakt dahin zurück -- der "Startpunkt" ist wörtlich der Rand,
+  // von dem sie kamen.
+  const ENTRY_DIRECTIONS = ["left", "top", "right", "bottom"];
+
+  function buildRevealOrder(mask, dir) {
     const N = PIXEL_GRID;
-    const cx = (N - 1) / 2, cy = (N - 1) / 2;
     const cells = [];
     for (let y = 0; y < N; y++) {
       for (let x = 0; x < N; x++) {
         const i = y * N + x;
         if (!mask[i]) continue;
-        const dist = Math.hypot(x - cx, y - cy) + Math.random() * 1.6;
-        cells.push({ x, y, dist });
+        let axisPos;
+        if (dir === "left") axisPos = x;
+        else if (dir === "right") axisPos = N - 1 - x;
+        else if (dir === "top") axisPos = y;
+        else axisPos = N - 1 - y;
+        cells.push({ x, y, dist: axisPos + Math.random() * 2.2 });
       }
     }
     cells.sort((a, b) => a.dist - b.dist);
     const maxDist = cells.length ? cells[cells.length - 1].dist : 1;
-    cells.forEach((c, i) => { c.order = maxDist > 0 ? c.dist / maxDist : 0; });
+    cells.forEach((c) => { c.order = maxDist > 0 ? c.dist / maxDist : 0; });
     return cells;
   }
 
-  const ASSEMBLE_S = 2.0, HOLD_S = 1.3, DISASSEMBLE_S = 1.5, GAP_S = 0.3;
+  const ASSEMBLE_S = 2.0, HOLD_S = 1.3, DISASSEMBLE_S = 1.6, GAP_S = 0.3;
   const CYCLE_S = ASSEMBLE_S + HOLD_S + DISASSEMBLE_S + GAP_S;
 
   let pixelShapeIndex = -1;
   let pixelCells = null;
   let pixelHue = 0;
+  let pixelDir = "left";
   let cycleT = 0;
 
   function setPixelShape(index) {
     pixelShapeIndex = ((index % PIXEL_SHAPES.length) + PIXEL_SHAPES.length) % PIXEL_SHAPES.length;
     const shape = PIXEL_SHAPES[pixelShapeIndex];
-    pixelCells = buildRevealOrder(buildShapeMask(shape.id));
+    pixelDir = ENTRY_DIRECTIONS[pixelShapeIndex % ENTRY_DIRECTIONS.length];
+    pixelCells = buildRevealOrder(buildShapeMask(shape.id), pixelDir);
     pixelHue = shape.hue;
     el.pipLabel.textContent = shape.label;
     cycleT = 0;
@@ -945,11 +955,13 @@
     const offX = (pipW - gridSize) / 2;
     const offY = (pipH - gridSize) / 2;
     const pad = cell * 0.12;
+    const flyDist = cell * 9; // wie weit außerhalb der "Startpunkt" liegt
 
     for (const c of pixelCells) {
-      // Beim Zusammensetzen wächst von innen (order klein) nach außen;
-      // beim Auflösen verschwindet zuerst außen -> zurück zur Mitte.
-      const localWindow = 0.22;
+      // Beim Zusammensetzen kommt zuerst dran, wer nahe an der Einflugkante
+      // liegt (order klein); beim Auflösen fliegt zuerst wieder raus, wer
+      // zuletzt kam -> alles läuft zurück zum selben Rand.
+      const localWindow = 0.3;
       let cellProgress;
       if (phase === "hold") cellProgress = 1;
       else if (phase === "gap") cellProgress = 0;
@@ -958,13 +970,24 @@
         cellProgress = clampNum((progress - start) / localWindow, 0, 1);
       }
       if (cellProgress <= 0) continue;
-      const eased = cellProgress * cellProgress * (3 - 2 * cellProgress);
-      const size = (cell - pad) * (0.35 + 0.65 * eased);
-      const x = offX + c.x * cell + (cell - size) / 2;
-      const y = offY + c.y * cell + (cell - size) / 2;
+      const eased = cellProgress < 1
+        ? 1 - Math.pow(1 - cellProgress, 3) // ease-out: schnell rein, sanft einrasten
+        : 1;
+
+      const targetX = offX + c.x * cell + cell / 2;
+      const targetY = offY + c.y * cell + cell / 2;
+      let startX = targetX, startY = targetY;
+      if (pixelDir === "left") startX = targetX - flyDist;
+      else if (pixelDir === "right") startX = targetX + flyDist;
+      else if (pixelDir === "top") startY = targetY - flyDist;
+      else startY = targetY + flyDist;
+
+      const cxPos = startX + (targetX - startX) * eased;
+      const cyPos = startY + (targetY - startY) * eased;
+      const size = (cell - pad) * (0.5 + 0.5 * eased);
       const lightness = 55 + 10 * Math.sin(t * 2 + c.x * 0.4 + c.y * 0.3);
-      pipCtx.fillStyle = `hsla(${pixelHue}, 85%, ${lightness}%, ${0.55 + 0.45 * eased})`;
-      pipCtx.fillRect(x, y, size, size);
+      pipCtx.fillStyle = `hsla(${pixelHue}, 85%, ${lightness}%, ${0.5 + 0.5 * eased})`;
+      pipCtx.fillRect(cxPos - size / 2, cyPos - size / 2, size, size);
     }
   }
 

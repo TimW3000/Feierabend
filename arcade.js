@@ -316,6 +316,22 @@
     }
   }
 
+  // Citrix/RDP-Fix: Über manche Remote-Desktop-Protokolle wird der erste
+  // Canvas-Frame nach dem Ausblenden der Overlays nicht als "geänderter
+  // Bereich" erkannt und bleibt schwarz, bis irgendeine echte DOM-Änderung
+  // (z.B. ein Overlay-Wechsel) einen Repaint erzwingt. Ein kurzes
+  // Sichtbarkeits-Flackern auf dem Canvas selbst reicht dafür schon aus.
+  function nudgeCanvasRepaint() {
+    canvas.style.visibility = "hidden";
+    void canvas.offsetHeight;
+    canvas.style.visibility = "visible";
+    requestAnimationFrame(function () {
+      canvas.style.visibility = "hidden";
+      void canvas.offsetHeight;
+      canvas.style.visibility = "visible";
+    });
+  }
+
   function startRun() {
     ensureAudio();
     activeGame.onStart();
@@ -323,6 +339,7 @@
     lastTs = 0;
     showOnly(null);
     requestAnimationFrame(loop);
+    nudgeCanvasRepaint();
   }
 
   function endRun(score) {
@@ -357,6 +374,7 @@
     showOnly(null);
     lastTs = 0;
     requestAnimationFrame(loop);
+    nudgeCanvasRepaint();
   }
 
   startBtn.addEventListener("click", startRun);
