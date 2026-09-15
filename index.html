@@ -7,10 +7,12 @@
 <meta name="description" content="Trag Start, Arbeitszeit und Pause ein und sieh live, wie lange es noch bis zum Feierabend dauert." />
 <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Ctext y='.9em' font-size='90'%3E%F0%9F%8C%87%3C/text%3E%3C/svg%3E" />
 <link rel="stylesheet" href="style.css" />
+<link rel="stylesheet" href="arcade.css" />
 </head>
 <body>
   <canvas id="confetti-canvas" aria-hidden="true"></canvas>
 
+  <div class="page">
   <div class="app">
     <header class="topbar">
       <div class="brand">
@@ -55,26 +57,23 @@
 
         <div class="pip-dock" id="pipDock">
           <div class="pip-header">
-            <span>🎬 PiP</span>
-            <button class="pip-close" id="pipClose" aria-label="Video schließen" hidden>✕</button>
+            <span id="pipLabel">🌀 Ambient</span>
+            <div class="pip-header-actions">
+              <button class="pip-icon-btn" id="pipShuffle" aria-label="Andere Animation">🔀</button>
+              <button class="pip-icon-btn" id="pipPause" aria-label="Animation pausieren">⏸️</button>
+            </div>
           </div>
           <div class="pip-body" id="pipBody">
-            <div class="pip-placeholder">📱<br>Link einfügen<br>⬇️</div>
+            <canvas id="pipCanvas"></canvas>
           </div>
         </div>
       </section>
-
-      <form class="pip-form" id="pipForm">
-        <input type="url" id="pipUrlInput" placeholder="TikTok- oder YouTube-Link einfügen…" inputmode="url" autocomplete="off" />
-        <button class="chip-btn" type="submit">▶️ Play</button>
-      </form>
 
       <section class="controls">
         <div class="field">
           <label for="startTime">Arbeitsbeginn</label>
           <div class="field-row">
             <input type="time" id="startTime" />
-            <button class="chip-btn" id="setNow" title="Jetzt als Startzeit übernehmen">Jetzt</button>
           </div>
           <div class="nudge-row" id="nudgeRow">
             <div class="nudge-group">
@@ -82,6 +81,7 @@
               <button class="chip-btn nudge" data-nudge="-5" title="5 Minuten früher">−5m</button>
               <button class="chip-btn nudge" data-nudge="-1" title="1 Minute früher">−1m</button>
             </div>
+            <button class="chip-btn" id="setNow" title="Jetzt als Startzeit übernehmen">Jetzt</button>
             <div class="nudge-group">
               <button class="chip-btn nudge" data-nudge="1" title="1 Minute später">+1m</button>
               <button class="chip-btn nudge" data-nudge="5" title="5 Minuten später">+5m</button>
@@ -124,14 +124,6 @@
         <span>Feierabend ist vorbei! Überstunden: <strong id="overtimeValue">00:00:00</strong></span>
       </section>
 
-      <section class="brainrot">
-        <div class="brainrot-label">🧠💀 Video suchen, Link kopieren, oben einfügen:</div>
-        <div class="chips">
-          <a class="chip-btn brainrot-link" href="https://www.tiktok.com/" target="_blank" rel="noopener noreferrer">TikTok 🎵</a>
-          <a class="chip-btn brainrot-link" href="https://www.youtube.com/shorts" target="_blank" rel="noopener noreferrer">YT Shorts ▶️</a>
-          <a class="chip-btn brainrot-link" href="https://www.instagram.com/reels/" target="_blank" rel="noopener noreferrer">Reels 📸</a>
-        </div>
-      </section>
     </main>
 
     <footer class="footer">
@@ -140,8 +132,64 @@
     </footer>
   </div>
 
+  <aside class="arcade-aside">
+    <section class="mini-arcade" id="miniArcade">
+      <div class="arcade-toolbar">
+        <span class="arcade-title">🕹️ Mini-Arcade <span class="arcade-active-label" id="arcadeActiveLabel"></span></span>
+        <div class="arcade-hud hidden" id="arcadeHud"></div>
+        <button class="arcade-theme-btn" id="arcadeThemeToggle" type="button">🍄 Retro</button>
+      </div>
+
+      <div class="arcade-wrap" id="arcadeWrap">
+        <canvas id="arcadeCanvas" width="400" height="640"></canvas>
+
+        <div id="arcadeHub" class="arcade-overlay arcade-hub-overlay">
+          <h2 id="arcadeHubTitle">MINI ARCADE</h2>
+          <p>Kurze Runde für die Wartezeit gefällig?</p>
+          <div id="arcadeHubGrid" class="arcade-hub-grid"></div>
+        </div>
+
+        <div id="arcadeStart" class="arcade-overlay hidden">
+          <h2 id="arcadeStartTitle">Spiel</h2>
+          <p id="arcadeStartDesc"></p>
+          <p class="arcade-controls-hint" id="arcadeStartControls"></p>
+          <button id="arcadeStartBtn" class="arcade-btn" type="button">Starten</button>
+          <button id="arcadeBackToHubBtn" class="arcade-text-btn" type="button">Zurück zur Auswahl</button>
+        </div>
+
+        <div id="arcadeGameOver" class="arcade-overlay hidden">
+          <h2>Run beendet</h2>
+          <p class="arcade-final-score">Score: <b id="arcadeFinalScore">0</b></p>
+          <p class="arcade-personal-best" id="arcadePersonalBest"></p>
+          <button id="arcadeRestartBtn" class="arcade-btn" type="button">Nochmal spielen</button>
+          <button id="arcadeGameOverBackBtn" class="arcade-text-btn" type="button">Zurück zur Auswahl</button>
+        </div>
+
+        <div id="arcadePause" class="arcade-overlay hidden">
+          <h2>Pausiert</h2>
+          <button id="arcadeResumeBtn" class="arcade-btn" type="button">Weiter</button>
+        </div>
+      </div>
+
+      <div class="arcade-footer-hint">Bestwerte gelten nur für diese Sitzung – kein Speichern, wie der Rest der Seite.</div>
+    </section>
+  </aside>
+  </div>
+
   <div class="toast" id="toast"></div>
 
   <script src="app.js"></script>
+  <script src="arcade.js"></script>
+  <script src="game-runner.js"></script>
+  <script src="game-drift.js"></script>
+  <script src="game-strike.js"></script>
+  <script src="game-breaker.js"></script>
+  <script src="game-snake.js"></script>
+  <script src="game-pong.js"></script>
+  <script src="game-duel.js"></script>
+  <script src="game-climber.js"></script>
+  <script src="game-blocks.js"></script>
+  <script src="game-fever.js"></script>
+  <script>Arcade.ready();</script>
 </body>
 </html>

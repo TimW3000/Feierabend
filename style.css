@@ -77,13 +77,45 @@ img { max-width: 100%; }
   height: 100vh;
 }
 
+.page {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  max-width: 960px;
+  margin: 0 auto;
+}
+
 .app {
   max-width: 560px;
+  width: 100%;
   margin: 0 auto;
   padding: 28px 18px 40px;
   display: flex;
   flex-direction: column;
   gap: 18px;
+}
+
+.arcade-aside {
+  width: 100%;
+  max-width: 560px;
+  padding: 0 18px 40px;
+}
+
+@media (min-width: 960px) {
+  .page {
+    flex-direction: row;
+    align-items: flex-start;
+    justify-content: center;
+    gap: 20px;
+  }
+  .app { margin: 0; }
+  .arcade-aside {
+    flex: 0 0 320px;
+    max-width: 320px;
+    padding: 28px 0 40px;
+    position: sticky;
+    top: 20px;
+  }
 }
 
 .topbar {
@@ -230,12 +262,6 @@ img { max-width: 100%; }
     align-self: stretch;
     width: 150px;
   }
-  .timer-row .pip-dock.pip-wide-content {
-    flex-basis: 100%;
-    width: 100%;
-    align-self: center;
-    max-width: 340px;
-  }
 }
 
 .pip-dock {
@@ -257,71 +283,34 @@ img { max-width: 100%; }
   color: var(--text-2);
   letter-spacing: 0.03em;
 }
-.pip-close {
+.pip-header-actions {
+  display: flex;
+  gap: 2px;
+}
+.pip-icon-btn {
   border: none;
   background: transparent;
   cursor: pointer;
-  font-size: 0.85rem;
+  font-size: 0.8rem;
   color: var(--text-muted);
   padding: 2px 4px;
   line-height: 1;
+  border-radius: 6px;
 }
-.pip-close:hover { color: var(--text-1); }
+.pip-icon-btn:hover { color: var(--text-1); background: var(--chip-bg); }
 
 .pip-body {
   flex: 1;
   position: relative;
   aspect-ratio: 9 / 16;
   background: #0b0b12;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  overflow: auto;
+  overflow: hidden;
 }
-.pip-body.wide { aspect-ratio: 16 / 9; }
-.pip-body iframe {
+#pipCanvas {
   width: 100%;
   height: 100%;
-  border: 0;
   display: block;
 }
-.pip-body blockquote.tiktok-embed {
-  margin: 0 !important;
-  width: 100% !important;
-  min-width: 0 !important;
-  max-width: 100% !important;
-}
-.pip-placeholder {
-  color: rgba(255, 255, 255, 0.55);
-  font-size: 0.7rem;
-  text-align: center;
-  line-height: 1.6;
-  padding: 10px;
-}
-
-.pip-form {
-  display: flex;
-  gap: 8px;
-  margin-top: -8px;
-}
-.pip-form input {
-  flex: 1;
-  font-family: var(--font-sans);
-  font-size: 0.85rem;
-  padding: 9px 12px;
-  border-radius: 12px;
-  border: 1px solid var(--card-border);
-  background: var(--chip-bg);
-  color: var(--text-1);
-  outline: none;
-  min-width: 0;
-  transition: box-shadow 0.2s ease, border 0.2s ease;
-}
-.pip-form input:focus {
-  box-shadow: 0 0 0 3px color-mix(in srgb, var(--accent) 35%, transparent);
-  border-color: var(--accent);
-}
-.pip-form button { flex: 0 0 auto; }
 
 /* --- Countdown --- */
 .countdown-block {
@@ -554,22 +543,6 @@ input::-webkit-calendar-picker-indicator { cursor: pointer; opacity: 0.7; }
   to { opacity: 1; transform: scale(1); }
 }
 
-/* --- Brainrot-Pause --- */
-.brainrot {
-  display: flex;
-  flex-direction: column;
-  gap: 8px;
-  padding-top: 2px;
-}
-.brainrot-label {
-  font-size: 0.78rem;
-  font-weight: 600;
-  color: var(--text-2);
-}
-.brainrot-link {
-  text-decoration: none;
-  display: inline-flex;
-}
 
 /* --- Chaos-Modus --- */
 @keyframes chaos-hue {

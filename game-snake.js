@@ -1,0 +1,333 @@
+/* ============================================================
+   NEON SNAKE — klassisches Snake im Neon-Look
+   ============================================================ */
+(function () {
+  "use strict";
+
+  const CELL = 24, COLS = 20, ROWS = 20;
+  const W = CELL * COLS, H = CELL * ROWS;
+  const START_INTERVAL = 0.14, MIN_INTERVAL = 0.062;
+
+  let snake, dir, nextDir, food, bonus, bonusTimer, bonusSpawnTimer, particles, popups;
+  let walls, shrinkPickup, shrinkPickupTimer, shrinkSpawnTimer;
+  let slowPickup, slowPickupTimer, slowSpawnTimer, slowTime;
+  let score = 0, moveTimer = 0, interval = START_INTERVAL;
+  let shakeT = 0;
+  let swipeStart = null;
+
+  function onStart() {
+    snake = [];
+    const cx = Math.floor(COLS / 2), cy = Math.floor(ROWS / 2);
+    for (let i = 0; i < 4; i++) snake.push({ x: cx - i, y: cy });
+    dir = { x: 1, y: 0 }; nextDir = { x: 1, y: 0 };
+    particles = []; popups = [];
+    score = 0; moveTimer = 0; interval = START_INTERVAL; shakeT = 0;
+    bonus = null; bonusTimer = 0; bonusSpawnTimer = 9 + Math.random() * 6;
+    walls = buildWalls();
+    shrinkPickup = null; shrinkPickupTimer = 0; shrinkSpawnTimer = 10 + Math.random() * 6;
+    slowPickup = null; slowPickupTimer = 0; slowSpawnTimer = 13 + Math.random() * 7; slowTime = 0;
+    food = spawnFood();
+    Arcade.setHud("score", 0);
+    Arcade.setHud("length", snake.length);
+  }
+
+  function buildWalls() {
+    const list = [];
+    const cx = Math.floor(COLS / 2), cy = Math.floor(ROWS / 2);
+    let tries = 0;
+    while (list.length < 10 && tries < 500) {
+      tries++;
+      const x = Math.floor(Math.random() * COLS), y = Math.floor(Math.random() * ROWS);
+      if (Math.abs(x - cx) < 6 && Math.abs(y - cy) < 5) continue;
+      if (list.some(function (w) { return w.x === x && w.y === y; })) continue;
+      list.push({ x: x, y: y });
+    }
+    return list;
+  }
+
+  function occupied(x, y, extra) {
+    for (let i = 0; i < snake.length; i++) if (snake[i].x === x && snake[i].y === y) return true;
+    for (let i = 0; i < walls.length; i++) if (walls[i].x === x && walls[i].y === y) return true;
+    if (extra && extra.x === x && extra.y === y) return true;
+    return false;
+  }
+
+  function spawnFood() {
+    let x, y, tries = 0;
+    do { x = Math.floor(Math.random() * COLS); y = Math.floor(Math.random() * ROWS); tries++; }
+    while (occupied(x, y) && tries < 200);
+    return { x: x, y: y };
+  }
+
+  function spawnBonus() {
+    let x, y, tries = 0;
+    do { x = Math.floor(Math.random() * COLS); y = Math.floor(Math.random() * ROWS); tries++; }
+    while ((occupied(x, y) || (food && food.x === x && food.y === y)) && tries < 200);
+    bonus = { x: x, y: y };
+    bonusTimer = 6;
+  }
+
+  function spawnShrinkFood() {
+    let x, y, tries = 0;
+    do { x = Math.floor(Math.random() * COLS); y = Math.floor(Math.random() * ROWS); tries++; }
+    while ((occupied(x, y) || (food && food.x === x && food.y === y) || (bonus && bonus.x === x && bonus.y === y) || (slowPickup && slowPickup.x === x && slowPickup.y === y)) && tries < 200);
+    shrinkPickup = { x: x, y: y };
+    shrinkPickupTimer = 7;
+  }
+
+  function spawnSlowFood() {
+    let x, y, tries = 0;
+    do { x = Math.floor(Math.random() * COLS); y = Math.floor(Math.random() * ROWS); tries++; }
+    while ((occupied(x, y) || (food && food.x === x && food.y === y) || (bonus && bonus.x === x && bonus.y === y) || (shrinkPickup && shrinkPickup.x === x && shrinkPickup.y === y)) && tries < 200);
+    slowPickup = { x: x, y: y };
+    slowPickupTimer = 7;
+  }
+
+  function spawnParticles(x, y, color, n) {
+    for (let i = 0; i < (n || 16); i++) {
+      const ang = Math.random() * Math.PI * 2, spd = 60 + Math.random() * 180;
+      particles.push({ x: x, y: y, vx: Math.cos(ang) * spd, vy: Math.sin(ang) * spd, life: 0.4 + Math.random() * 0.3, maxLife: 0.7, color: color });
+    }
+  }
+  function spawnPopup(x, y, text, color) { popups.push({ x: x, y: y, text: text, color: color, life: 0.6, maxLife: 0.6 }); }
+
+  function onUpdate(dt) {
+    moveTimer -= dt;
+    if (bonus) {
+      bonusTimer -= dt;
+      if (bonusTimer <= 0) bonus = null;
+    }
+    bonusSpawnTimer -= dt;
+    if (!bonus && bonusSpawnTimer <= 0) { spawnBonus(); bonusSpawnTimer = 14 + Math.random() * 8; }
+
+    if (shrinkPickup) { shrinkPickupTimer -= dt; if (shrinkPickupTimer <= 0) shrinkPickup = null; }
+    shrinkSpawnTimer -= dt;
+    if (!shrinkPickup && shrinkSpawnTimer <= 0) { spawnShrinkFood(); shrinkSpawnTimer = 16 + Math.random() * 9; }
+
+    if (slowPickup) { slowPickupTimer -= dt; if (slowPickupTimer <= 0) slowPickup = null; }
+    slowSpawnTimer -= dt;
+    if (!slowPickup && slowSpawnTimer <= 0) { spawnSlowFood(); slowSpawnTimer = 16 + Math.random() * 9; }
+    if (slowTime > 0) slowTime -= dt;
+
+    if (moveTimer <= 0) {
+      dir = nextDir;
+      const head = snake[0];
+      const nx = head.x + dir.x, ny = head.y + dir.y;
+
+      if (nx < 0 || nx >= COLS || ny < 0 || ny >= ROWS) { crash(); return; }
+      for (let i = 0; i < snake.length; i++) {
+        if (snake[i].x === nx && snake[i].y === ny) { crash(); return; }
+      }
+      for (let i = 0; i < walls.length; i++) {
+        if (walls[i].x === nx && walls[i].y === ny) { crash(); return; }
+      }
+
+      snake.unshift({ x: nx, y: ny });
+
+      let grew = false;
+      if (food && nx === food.x && ny === food.y) {
+        score += 10;
+        spawnPopup(nx * CELL + CELL / 2, ny * CELL + CELL / 2, "+10", Arcade.theme().collectible);
+        spawnParticles(nx * CELL + CELL / 2, ny * CELL + CELL / 2, Arcade.theme().collectible, 14);
+        Arcade.beep(680, 1080, 0.08, "triangle", 0.12);
+        food = spawnFood();
+        grew = true;
+      }
+      if (bonus && nx === bonus.x && ny === bonus.y) {
+        score += 50;
+        spawnPopup(nx * CELL + CELL / 2, ny * CELL + CELL / 2, "+50", Arcade.theme().powerupB);
+        spawnParticles(nx * CELL + CELL / 2, ny * CELL + CELL / 2, Arcade.theme().powerupB, 22);
+        Arcade.beep(220, 1100, 0.28, "sawtooth", 0.1);
+        bonus = null;
+        grew = true;
+      }
+      if (shrinkPickup && nx === shrinkPickup.x && ny === shrinkPickup.y) {
+        const shrinkAmt = Math.min(3, Math.max(0, snake.length - 3));
+        for (let k = 0; k < shrinkAmt; k++) snake.pop();
+        spawnPopup(nx * CELL + CELL / 2, ny * CELL + CELL / 2, "-" + shrinkAmt, Arcade.theme().hazardA);
+        spawnParticles(nx * CELL + CELL / 2, ny * CELL + CELL / 2, Arcade.theme().hazardA, 18);
+        Arcade.beep(500, 150, 0.2, "sawtooth", 0.12);
+        shrinkPickup = null;
+        grew = true;
+      }
+      if (slowPickup && nx === slowPickup.x && ny === slowPickup.y) {
+        slowTime = 5;
+        spawnPopup(nx * CELL + CELL / 2, ny * CELL + CELL / 2, "LANGSAM", Arcade.theme().hazardB);
+        spawnParticles(nx * CELL + CELL / 2, ny * CELL + CELL / 2, Arcade.theme().hazardB, 18);
+        Arcade.beep(180, 90, 0.25, "sawtooth", 0.12);
+        slowPickup = null;
+      }
+      if (!grew) snake.pop();
+
+      interval = Math.max(MIN_INTERVAL, START_INTERVAL - snake.length * 0.0028);
+      moveTimer = interval * (slowTime > 0 ? 1.8 : 1);
+      Arcade.setHud("score", Math.floor(score));
+      Arcade.setHud("length", snake.length);
+    }
+
+    for (let i = particles.length - 1; i >= 0; i--) {
+      const p = particles[i];
+      p.life -= dt; p.x += p.vx * dt; p.y += p.vy * dt; p.vx *= 0.92; p.vy *= 0.92;
+      if (p.life <= 0) particles.splice(i, 1);
+    }
+    for (let i = popups.length - 1; i >= 0; i--) {
+      const p = popups[i];
+      p.life -= dt; p.y -= 25 * dt;
+      if (p.life <= 0) popups.splice(i, 1);
+    }
+    if (shakeT > 0) shakeT = Math.max(0, shakeT - dt);
+  }
+
+  function crash() {
+    const head = snake[0];
+    spawnParticles(head.x * CELL + CELL / 2, head.y * CELL + CELL / 2, Arcade.theme().hazardB, 26);
+    shakeT = 0.3;
+    Arcade.beep(300, 40, 0.4, "sawtooth", 0.18);
+    Arcade.endRun(score);
+  }
+
+  function cellPath(ctx, gx, gy, pad) {
+    const r = 5;
+    const x = gx * CELL + pad, y = gy * CELL + pad, s = CELL - pad * 2;
+    ctx.beginPath();
+    ctx.moveTo(x + r, y);
+    ctx.arcTo(x + s, y, x + s, y + s, r);
+    ctx.arcTo(x + s, y + s, x, y + s, r);
+    ctx.arcTo(x, y + s, x, y, r);
+    ctx.arcTo(x, y, x + s, y, r);
+    ctx.closePath();
+  }
+  function roundCell(ctx, gx, gy, pad, color, useBlur) {
+    ctx.save();
+    if (useBlur) { ctx.shadowColor = color; ctx.shadowBlur = 14; }
+    ctx.fillStyle = color;
+    cellPath(ctx, gx, gy, pad);
+    ctx.fill();
+    ctx.restore();
+  }
+
+  let bgGradient = null, bgGradientFor = null;
+  function onDraw(ctx, w, h) {
+    const th = Arcade.theme();
+    ctx.save();
+    if (shakeT > 0) ctx.translate((Math.random() - 0.5) * 8 * (shakeT / 0.3), (Math.random() - 0.5) * 8 * (shakeT / 0.3));
+    ctx.clearRect(-20, -20, w + 40, h + 40);
+    if (!bgGradient || bgGradientFor !== th) {
+      bgGradient = ctx.createLinearGradient(0, 0, 0, h);
+      bgGradient.addColorStop(0, th.bgTop); bgGradient.addColorStop(1, th.bgBottom);
+      bgGradientFor = th;
+    }
+    ctx.fillStyle = bgGradient; ctx.fillRect(-20, -20, w + 40, h + 40);
+
+    ctx.strokeStyle = Arcade.isRetro() ? "rgba(255,255,255,0.15)" : "rgba(0,246,255,0.06)"; ctx.lineWidth = 1;
+    ctx.beginPath();
+    for (let x = 0; x <= COLS; x++) { ctx.moveTo(x * CELL, 0); ctx.lineTo(x * CELL, h); }
+    for (let y = 0; y <= ROWS; y++) { ctx.moveTo(0, y * CELL); ctx.lineTo(w, y * CELL); }
+    ctx.stroke();
+
+    walls.forEach(function (w) {
+      ctx.save();
+      ctx.fillStyle = th.groundDim;
+      ctx.fillRect(w.x * CELL + 1, w.y * CELL + 1, CELL - 2, CELL - 2);
+      ctx.strokeStyle = th.ground; ctx.lineWidth = 1.5;
+      ctx.strokeRect(w.x * CELL + 1, w.y * CELL + 1, CELL - 2, CELL - 2);
+      ctx.beginPath();
+      ctx.moveTo(w.x * CELL + 1, w.y * CELL + CELL / 2); ctx.lineTo(w.x * CELL + CELL - 1, w.y * CELL + CELL / 2);
+      ctx.moveTo(w.x * CELL + CELL / 2, w.y * CELL + 1); ctx.lineTo(w.x * CELL + CELL / 2, w.y * CELL + CELL - 1);
+      ctx.strokeStyle = th.ground + "66"; ctx.lineWidth = 1;
+      ctx.stroke();
+      ctx.restore();
+    });
+
+    if (food) roundCell(ctx, food.x, food.y, 5, th.collectible, !Arcade.isRetro());
+    if (bonus) {
+      const pulse = bonusTimer < 2 ? Math.abs(Math.sin(bonusTimer * 10)) : 1;
+      ctx.globalAlpha = 0.5 + pulse * 0.5;
+      roundCell(ctx, bonus.x, bonus.y, 3, th.powerupB, !Arcade.isRetro());
+      ctx.globalAlpha = 1;
+    }
+    if (shrinkPickup) {
+      const pulse = shrinkPickupTimer < 2 ? Math.abs(Math.sin(shrinkPickupTimer * 10)) : 1;
+      ctx.globalAlpha = 0.5 + pulse * 0.5;
+      roundCell(ctx, shrinkPickup.x, shrinkPickup.y, 6, th.hazardA, !Arcade.isRetro());
+      ctx.globalAlpha = 1;
+      ctx.save();
+      ctx.strokeStyle = "#fff"; ctx.lineWidth = 2;
+      ctx.beginPath();
+      ctx.moveTo(shrinkPickup.x * CELL + 7, shrinkPickup.y * CELL + CELL / 2);
+      ctx.lineTo(shrinkPickup.x * CELL + CELL - 7, shrinkPickup.y * CELL + CELL / 2);
+      ctx.stroke();
+      ctx.restore();
+    }
+    if (slowPickup) {
+      const pulse = slowPickupTimer < 2 ? Math.abs(Math.sin(slowPickupTimer * 10)) : 1;
+      ctx.globalAlpha = 0.5 + pulse * 0.5;
+      roundCell(ctx, slowPickup.x, slowPickup.y, 6, th.hazardB, !Arcade.isRetro());
+      ctx.globalAlpha = 1;
+    }
+
+    snake.forEach(function (seg, i) {
+      const t = i / snake.length;
+      const color = i === 0 ? th.player : th.player + Math.round((0.95 - t * 0.55) * 255).toString(16).padStart(2, "0");
+      roundCell(ctx, seg.x, seg.y, 2, color, i === 0 && !Arcade.isRetro());
+    });
+
+    particles.forEach(function (p) {
+      ctx.globalAlpha = Math.max(0, p.life / p.maxLife);
+      ctx.fillStyle = p.color; ctx.fillRect(p.x - 2, p.y - 2, 4, 4);
+      ctx.globalAlpha = 1;
+    });
+    ctx.save();
+    ctx.font = "600 13px 'JetBrains Mono', monospace"; ctx.textAlign = "center";
+    popups.forEach(function (p) {
+      ctx.globalAlpha = Math.max(0, p.life / p.maxLife);
+      ctx.fillStyle = p.color; ctx.fillText(p.text, p.x, p.y);
+    });
+    ctx.restore(); ctx.globalAlpha = 1;
+    ctx.restore();
+  }
+
+  function setDir(x, y) {
+    if (snake.length > 1 && dir.x === -x && dir.y === -y) return;
+    nextDir = { x: x, y: y };
+  }
+
+  function onKeyDown(e) {
+    if (e.key === "ArrowUp" || e.key === "w" || e.key === "W") { e.preventDefault(); setDir(0, -1); }
+    if (e.key === "ArrowDown" || e.key === "s" || e.key === "S") { e.preventDefault(); setDir(0, 1); }
+    if (e.key === "ArrowLeft" || e.key === "a" || e.key === "A") { e.preventDefault(); setDir(-1, 0); }
+    if (e.key === "ArrowRight" || e.key === "d" || e.key === "D") { e.preventDefault(); setDir(1, 0); }
+  }
+
+  function onPointerDown(e) {
+    if (e.cancelable) e.preventDefault();
+    swipeStart = { x: e.clientX, y: e.clientY };
+  }
+  function onPointerUp(e) {
+    if (!swipeStart) return;
+    const dx = e.clientX - swipeStart.x, dy = e.clientY - swipeStart.y;
+    swipeStart = null;
+    if (Math.abs(dx) < 18 && Math.abs(dy) < 18) return;
+    if (Math.abs(dx) > Math.abs(dy)) setDir(dx > 0 ? 1 : -1, 0);
+    else setDir(0, dy > 0 ? 1 : -1);
+  }
+
+  Arcade.registerGame({
+    id: "snake",
+    name: "Neon Snake",
+    tagline: "Fressen, wachsen, nicht crashen",
+    accent: "#00f6ff",
+    canvasW: W,
+    canvasH: H,
+    description: "Sammle die gelben Orbs und wachse. Feldwände, Mauerblöcke und der eigene Schwanz sind tödlich.<br>Magenta Bonus-Orbs geben mehr Punkte, orange Orbs lassen dich schrumpfen, pinke Orbs verlangsamen dich kurzzeitig.",
+    controlsHint: "Richtung: Pfeiltasten / WASD · oder Wischen mit dem Finger",
+    startLabel: "Los geht's",
+    hud: [{ id: "score", label: "Score" }, { id: "best", label: "Best" }, { id: "length", label: "Länge" }],
+    onStart: onStart,
+    onUpdate: onUpdate,
+    onDraw: onDraw,
+    onKeyDown: onKeyDown,
+    onPointerDown: onPointerDown,
+    onPointerUp: onPointerUp
+  });
+})();

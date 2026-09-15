@@ -20,19 +20,26 @@ und Pause.
   plus ein separater "Fun Fact"-Ticker mit ca. 30 unnützen Büro-Wahrheiten
 - 🌀 Chaos-Button: Emoji-Regen, Farb-Verzerrung, Konfetti und ein zufälliger
   Chaos-Spruch auf einen Klick
-- 🎬 **PiP-Player direkt neben dem Countdown**: TikTok- oder YouTube-Link
-  einfügen (Feld unter dem Timer) → läuft sofort als kleines Bild-in-Bild-
-  Fenster neben dem Countdown. YouTube (inkl. Shorts) funktioniert
-  zuverlässig in jeder Größe; TikTok nutzt deren offizielles Embed-Widget,
-  das aber eine gewisse Mindestbreite verlangt und sich bei Bedarf
-  automatisch verbreitert. Ein direktes "endlos durchswipbares" Feed lässt
-  sich technisch nicht einbetten (TikTok/Reels blocken das ohne Login/API) –
-  darum gibt es zusätzlich Schnelllinks, um ein Video zu suchen und den
-  Link hier einzufügen.
-- Arbeitsbeginn frei editierbar: Zeit-Eingabe, "Jetzt"-Button und eine
-  eigene Zeile mit Fein-Buttons (±1h / ±5m / ±1m) zum exakten Treffen
+- 🎬 **Ambient-Player direkt neben dem Countdown**: eine kleine, komplett
+  lokal berechnete Endlos-Animation (Lava-Blobs, Warp-Starfield, Matrix-Rain,
+  Aurora-Wellen) läuft als Bild-in-Bild-Fenster neben dem Timer – zum
+  Zuschauen während der Wartezeit. 🔀 wechselt die Animation, ⏸️ pausiert.
+  Bewusst kein echtes TikTok/YouTube-Embedding mehr: externe Video-Widgets
+  laufen unzuverlässig (Mindestbreiten, "Video nicht verfügbar" auf manchen
+  Geräten) und brauchen Netzwerkzugriff, den restriktive Firewalls oft
+  blockieren – die Animation braucht dagegen keinerlei externe Ressourcen.
+- Arbeitsbeginn frei editierbar: Zeit-Eingabe oben, darunter eine Zeile mit
+  Fein-Buttons (−1h/−5m/−1m … "Jetzt" … +1m/+5m/+1h) zum exakten Treffen
 - Schnellauswahl-Chips für Arbeitszeiten (6h–8,5h, inkl. 7,8h = 7h48min) und Pausen
 - Dark/Light-Mode (startet mit Systemeinstellung)
+- 🕹️ **Mini-Arcade** an der Seite: 10 kleine Browser-Spiele (Runner, Drift,
+  Shooter, Breakout, Snake, Pong, 1v1-Duell, Climber, Blocks/Tetris-Style,
+  Rhythmus-Spiel) für eine kurze Runde nebenbei. Adaptiert aus
+  [TimW3000/Fakten-Website](https://github.com/TimW3000/Fakten-Website),
+  aber ohne Firebase-Leaderboard und ohne `localStorage` – Bestwerte gelten
+  nur für die aktuelle Sitzung, passend zum "alles startet frisch"-Prinzip
+  dieser Seite. Auf Desktop steht die Arcade neben dem Rechner, auf Mobile
+  darunter.
 - **Kein `localStorage`, kein Tracking:** Die Seite merkt sich nichts und ist
   für mehrere Personen gleichzeitig auf unterschiedlichen Geräten gedacht –
   jeder Aufruf startet komplett frisch mit der aktuellen Uhrzeit als Start.

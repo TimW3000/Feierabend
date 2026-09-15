@@ -25,9 +25,10 @@
     chaosBtn: document.getElementById("chaosBtn"),
     pipDock: document.getElementById("pipDock"),
     pipBody: document.getElementById("pipBody"),
-    pipForm: document.getElementById("pipForm"),
-    pipUrlInput: document.getElementById("pipUrlInput"),
-    pipClose: document.getElementById("pipClose"),
+    pipCanvas: document.getElementById("pipCanvas"),
+    pipLabel: document.getElementById("pipLabel"),
+    pipShuffle: document.getElementById("pipShuffle"),
+    pipPause: document.getElementById("pipPause"),
     scene: document.getElementById("scene"),
     sunMoon: document.getElementById("sunMoon"),
     overtimeBox: document.getElementById("overtimeBox"),
@@ -809,93 +810,204 @@
     if (state.soundOn) playChime();
   });
 
-  // ---------- PiP-Player (Brainrot-Pause direkt neben dem Timer) ----------
-  function parseVideoUrl(raw) {
-    let str = (raw || "").trim();
-    if (!str) return null;
-    if (!/^https?:\/\//i.test(str)) str = `https://${str}`;
-    let u;
-    try {
-      u = new URL(str);
-    } catch {
-      return null;
-    }
-    const host = u.hostname.replace(/^www\.|^m\./, "");
+  // ---------- Ambient-Animationen (statt Video-Embedding) ----------
+  // Läuft komplett lokal ohne Netzwerk – kein TikTok/YouTube-Verlass nötig.
+  const pipCtx = el.pipCanvas.getContext("2d");
+  let pipW = 0, pipH = 0, pipDpr = 1;
+  let pipRunning = true;
+  let pipT = 0;
+  let pipRafId = null;
 
-    if (host === "youtube.com" || host === "youtube-nocookie.com") {
-      if (u.pathname.startsWith("/shorts/")) {
-        const id = u.pathname.split("/")[2];
-        if (id) return { type: "youtube", id, wide: false };
-      }
-      const vId = u.searchParams.get("v");
-      if (vId) return { type: "youtube", id: vId, wide: true };
-      const embedMatch = u.pathname.match(/^\/embed\/([\w-]+)/);
-      if (embedMatch) return { type: "youtube", id: embedMatch[1], wide: true };
-    }
-    if (host === "youtu.be") {
-      const id = u.pathname.slice(1).split("/")[0];
-      if (id) return { type: "youtube", id, wide: true };
-    }
-    if (host === "tiktok.com" || host.endsWith(".tiktok.com")) {
-      return { type: "tiktok", url: u.toString(), wide: false };
-    }
-    return null;
+  function resizePipCanvas() {
+    const rect = el.pipBody.getBoundingClientRect();
+    pipDpr = Math.min(devicePixelRatio || 1, 2);
+    pipW = Math.max(1, Math.round(rect.width));
+    pipH = Math.max(1, Math.round(rect.height));
+    el.pipCanvas.width = pipW * pipDpr;
+    el.pipCanvas.height = pipH * pipDpr;
+    pipCtx.setTransform(pipDpr, 0, 0, pipDpr, 0, 0);
   }
 
-  let tiktokScriptEl = null;
-  function ensureTikTokScript() {
-    if (tiktokScriptEl) tiktokScriptEl.remove();
-    tiktokScriptEl = document.createElement("script");
-    tiktokScriptEl.src = "https://www.tiktok.com/embed.js";
-    tiktokScriptEl.async = true;
-    document.body.appendChild(tiktokScriptEl);
+  const AMBIENT_STYLES = [
+    {
+      id: "lava",
+      label: "🌋 Lava",
+      blobs: null,
+      init() {
+        this.blobs = Array.from({ length: 5 }, (_, i) => ({
+          hue: [280, 320, 190, 40, 150][i],
+          rx: 0.25 + Math.random() * 0.15,
+          ry: 0.25 + Math.random() * 0.15,
+          speedX: 0.15 + Math.random() * 0.15,
+          speedY: 0.12 + Math.random() * 0.18,
+          phaseX: Math.random() * Math.PI * 2,
+          phaseY: Math.random() * Math.PI * 2,
+          r: 0.28 + Math.random() * 0.14,
+        }));
+      },
+      draw(ctx, w, h, t) {
+        ctx.fillStyle = "rgba(6, 4, 16, 0.18)";
+        ctx.fillRect(0, 0, w, h);
+        ctx.globalCompositeOperation = "lighter";
+        for (const b of this.blobs) {
+          const cx = w * (0.5 + b.rx * Math.sin(t * b.speedX + b.phaseX));
+          const cy = h * (0.5 + b.ry * Math.cos(t * b.speedY + b.phaseY));
+          const r = Math.min(w, h) * b.r;
+          const g = ctx.createRadialGradient(cx, cy, 0, cx, cy, r);
+          g.addColorStop(0, `hsla(${b.hue}, 90%, 60%, 0.55)`);
+          g.addColorStop(1, `hsla(${b.hue}, 90%, 50%, 0)`);
+          ctx.fillStyle = g;
+          ctx.beginPath();
+          ctx.arc(cx, cy, r, 0, Math.PI * 2);
+          ctx.fill();
+        }
+        ctx.globalCompositeOperation = "source-over";
+      },
+    },
+    {
+      id: "warp",
+      label: "🌌 Warp",
+      stars: null,
+      init(w, h) {
+        this.stars = Array.from({ length: 140 }, () => this.spawnStar(w, h));
+      },
+      spawnStar(w, h) {
+        return {
+          x: (Math.random() - 0.5) * w,
+          y: (Math.random() - 0.5) * h,
+          z: Math.random() * w,
+        };
+      },
+      draw(ctx, w, h) {
+        ctx.fillStyle = "rgba(4, 2, 12, 0.35)";
+        ctx.fillRect(0, 0, w, h);
+        const cx = w / 2, cy = h / 2;
+        ctx.strokeStyle = "#9be8ff";
+        for (const s of this.stars) {
+          s.z -= 6;
+          if (s.z <= 1) Object.assign(s, this.spawnStar(w, h), { z: w });
+          const k = w / s.z;
+          const x = cx + s.x * k;
+          const y = cy + s.y * k;
+          const pk = w / (s.z + 10);
+          const px = cx + s.x * pk;
+          const py = cy + s.y * pk;
+          if (x < 0 || x > w || y < 0 || y > h) continue;
+          const size = Math.max(0.5, (1 - s.z / w) * 2.4);
+          ctx.globalAlpha = Math.min(1, (1 - s.z / w) * 1.4);
+          ctx.lineWidth = size;
+          ctx.beginPath();
+          ctx.moveTo(px, py);
+          ctx.lineTo(x, y);
+          ctx.stroke();
+        }
+        ctx.globalAlpha = 1;
+      },
+    },
+    {
+      id: "matrix",
+      label: "🟩 Matrix",
+      cols: null,
+      chars: "アイウエオカキクケコサシスセソ01",
+      init(w) {
+        const fontSize = 12;
+        const colCount = Math.ceil(w / fontSize);
+        this.fontSize = fontSize;
+        this.cols = Array.from({ length: colCount }, () => Math.random() * -40);
+      },
+      draw(ctx, w, h) {
+        ctx.fillStyle = "rgba(4, 10, 4, 0.22)";
+        ctx.fillRect(0, 0, w, h);
+        ctx.font = `${this.fontSize}px monospace`;
+        for (let i = 0; i < this.cols.length; i++) {
+          const x = i * this.fontSize;
+          const y = this.cols[i] * this.fontSize;
+          const ch = this.chars[Math.floor(Math.random() * this.chars.length)];
+          ctx.fillStyle = "#c9ffce";
+          ctx.fillText(ch, x, y);
+          ctx.fillStyle = "#22c55e";
+          ctx.fillText(ch, x, y - this.fontSize);
+          this.cols[i] += 0.5 + Math.random() * 0.4;
+          if (y > h && Math.random() > 0.975) this.cols[i] = 0;
+        }
+      },
+    },
+    {
+      id: "aurora",
+      label: "🌈 Aurora",
+      draw(ctx, w, h, t) {
+        ctx.fillStyle = "rgba(4, 4, 14, 0.25)";
+        ctx.fillRect(0, 0, w, h);
+        const bands = 4;
+        for (let i = 0; i < bands; i++) {
+          const hue = (t * 12 + i * 70) % 360;
+          ctx.strokeStyle = `hsla(${hue}, 85%, 65%, 0.55)`;
+          ctx.lineWidth = 2 + i;
+          ctx.beginPath();
+          for (let x = 0; x <= w; x += 6) {
+            const y =
+              h * (0.3 + i * 0.15) +
+              Math.sin(x * 0.02 + t * (0.6 + i * 0.15) + i) * (h * 0.08) +
+              Math.sin(x * 0.008 - t * 0.3 + i * 2) * (h * 0.05);
+            if (x === 0) ctx.moveTo(x, y);
+            else ctx.lineTo(x, y);
+          }
+          ctx.stroke();
+        }
+      },
+    },
+  ];
+
+  let pipStyleIndex = 0;
+  let pipStyle = null;
+
+  function setPipStyle(index) {
+    pipStyleIndex = ((index % AMBIENT_STYLES.length) + AMBIENT_STYLES.length) % AMBIENT_STYLES.length;
+    pipStyle = AMBIENT_STYLES[pipStyleIndex];
+    if (pipStyle.init) pipStyle.init(pipW, pipH);
+    el.pipLabel.textContent = pipStyle.label;
   }
 
-  function renderPip(parsed) {
-    el.pipBody.innerHTML = "";
-    el.pipBody.classList.toggle("wide", !!parsed.wide);
-    el.pipDock.classList.toggle("pip-wide-content", parsed.type === "tiktok");
-
-    if (parsed.type === "youtube") {
-      const iframe = document.createElement("iframe");
-      iframe.src = `https://www.youtube-nocookie.com/embed/${parsed.id}?autoplay=1&mute=1&playsinline=1`;
-      iframe.allow = "autoplay; encrypted-media; picture-in-picture; fullscreen";
-      iframe.allowFullscreen = true;
-      iframe.referrerPolicy = "strict-origin-when-cross-origin";
-      el.pipBody.appendChild(iframe);
-    } else if (parsed.type === "tiktok") {
-      const bq = document.createElement("blockquote");
-      bq.className = "tiktok-embed";
-      bq.setAttribute("cite", parsed.url);
-      const a = document.createElement("a");
-      a.href = parsed.url;
-      a.textContent = "TikTok-Video";
-      bq.appendChild(a);
-      el.pipBody.appendChild(bq);
-      ensureTikTokScript();
-    }
-    el.pipClose.hidden = false;
+  function pipLoop(ts) {
+    if (!pipRunning) return;
+    pipT = ts / 1000;
+    pipStyle.draw(pipCtx, pipW, pipH, pipT);
+    pipRafId = requestAnimationFrame(pipLoop);
   }
 
-  function closePip() {
-    el.pipBody.innerHTML = '<div class="pip-placeholder">📱<br>Link einfügen<br>⬇️</div>';
-    el.pipBody.classList.remove("wide");
-    el.pipDock.classList.remove("pip-wide-content");
-    el.pipClose.hidden = true;
+  function startPip() {
+    if (pipRafId) return;
+    pipRunning = true;
+    el.pipPause.textContent = "⏸️";
+    pipRafId = requestAnimationFrame(pipLoop);
   }
 
-  el.pipForm.addEventListener("submit", (e) => {
-    e.preventDefault();
-    const parsed = parseVideoUrl(el.pipUrlInput.value);
-    if (!parsed) {
-      showToast("🤷 Link nicht erkannt – TikTok- oder YouTube-/Shorts-Link einfügen.");
-      return;
-    }
-    renderPip(parsed);
-    el.pipUrlInput.value = "";
+  function stopPip() {
+    pipRunning = false;
+    if (pipRafId) cancelAnimationFrame(pipRafId);
+    pipRafId = null;
+    el.pipPause.textContent = "▶️";
+  }
+
+  el.pipShuffle.addEventListener("click", () => {
+    let next = Math.floor(Math.random() * AMBIENT_STYLES.length);
+    if (AMBIENT_STYLES.length > 1 && next === pipStyleIndex) next = (next + 1) % AMBIENT_STYLES.length;
+    setPipStyle(next);
   });
 
-  el.pipClose.addEventListener("click", closePip);
+  el.pipPause.addEventListener("click", () => {
+    if (pipRunning) stopPip();
+    else startPip();
+  });
+
+  document.addEventListener("visibilitychange", () => {
+    if (document.hidden) stopPip();
+    else if (el.pipPause.textContent === "⏸️") startPip();
+  });
+
+  resizePipCanvas();
+  setPipStyle(Math.floor(Math.random() * AMBIENT_STYLES.length));
+  startPip();
 
   el.shareBtn.addEventListener("click", async () => {
     const params = new URLSearchParams({
@@ -916,6 +1028,8 @@
   window.addEventListener("resize", () => {
     resizeConfettiCanvas();
     initStars();
+    resizePipCanvas();
+    setPipStyle(pipStyleIndex);
   });
 
   // ---------- Init ----------
