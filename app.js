@@ -27,8 +27,10 @@
     pipBody: document.getElementById("pipBody"),
     pipCanvas: document.getElementById("pipCanvas"),
     pipLabel: document.getElementById("pipLabel"),
+    pipMode: document.getElementById("pipMode"),
     pipShuffle: document.getElementById("pipShuffle"),
     pipPause: document.getElementById("pipPause"),
+    pipHint: document.getElementById("pipHint"),
     scene: document.getElementById("scene"),
     sunMoon: document.getElementById("sunMoon"),
     overtimeBox: document.getElementById("overtimeBox"),
@@ -810,10 +812,8 @@
     if (state.soundOn) playChime();
   });
 
-  // ---------- Pixel-Art-Loop (statt Video-Embedding) ----------
-  // Läuft komplett lokal ohne Netzwerk. Ein Pixel-Motiv setzt sich nach und
-  // nach zusammen, hält kurz, löst sich wieder auf (zurück zum leeren
-  // Startpunkt) und macht so Platz für das nächste Motiv – endlos, nahtlos.
+  // ---------- PiP-Player: Formen-Loop / Game of Life / Sierpinski ----------
+  // Läuft komplett lokal ohne Netzwerk, drei Modi über 🔄 wechselbar.
   const pipCtx = el.pipCanvas.getContext("2d");
   let pipW = 0, pipH = 0, pipDpr = 1;
   let pipRunning = true;
@@ -830,6 +830,31 @@
     pipCtx.setTransform(pipDpr, 0, 0, pipDpr, 0, 0);
   }
 
+  function pipGridMetrics(N) {
+    const cell = (Math.min(pipW, pipH) * 0.86) / N;
+    const gridSize = cell * N;
+    return { cell, offX: (pipW - gridSize) / 2, offY: (pipH - gridSize) / 2 };
+  }
+
+  function pipClientToGrid(e, N) {
+    const rect = el.pipCanvas.getBoundingClientRect();
+    if (!rect.width || !rect.height) return null;
+    const localX = (e.clientX - rect.left) * (pipW / rect.width);
+    const localY = (e.clientY - rect.top) * (pipH / rect.height);
+    const { cell, offX, offY } = pipGridMetrics(N);
+    const gx = Math.floor((localX - offX) / cell);
+    const gy = Math.floor((localY - offY) / cell);
+    if (gx < 0 || gx >= N || gy < 0 || gy >= N) return null;
+    return { x: gx, y: gy };
+  }
+
+  function clampNum(v, lo, hi) { return Math.max(lo, Math.min(hi, v)); }
+
+  const PIP_MODES = ["shapes", "life", "sierpinski"];
+  let pipModeIndex = 0;
+  let pipMode = PIP_MODES[0];
+
+  // ===== Modus 1: Formen (Stern/Herz/... fliegen rein, lösen sich auf) =====
   const PIXEL_GRID = 16;
   const PIXEL_SHAPES = [
     { id: "star", label: "⭐ Stern", hue: 46 },
@@ -858,10 +883,20 @@
           const edge = inner + (outer - inner) * (1 - Math.abs(a) / (seg / 2));
           filled = r <= edge;
         } else if (id === "heart") {
-          const hx = dx / (N * 0.5);
-          const hy = -dy / (N * 0.46) - 0.3;
-          const val = Math.pow(hx * hx + hy * hy - 1, 3) - hx * hx * hy * hy * hy;
-          filled = val <= 0;
+          // Zwei Kreise (obere Wölbungen) + ein Dreieck (Spitze unten),
+          // die Kanten treffen sich exakt -- klassische Herz-Konstruktion.
+          const s = N * 0.17;
+          const dx0 = N * 0.17;
+          const ly = cy - N * 0.08;
+          const inCircles = Math.hypot(x - (cx - dx0), y - ly) <= s || Math.hypot(x - (cx + dx0), y - ly) <= s;
+          const topY = ly, botY = cy + N * 0.46;
+          const topHalfW = dx0 + s;
+          let inTri = false;
+          if (y >= topY && y <= botY) {
+            const ratio = (y - topY) / (botY - topY);
+            inTri = Math.abs(dx) <= topHalfW * (1 - ratio);
+          }
+          filled = inCircles || inTri;
         } else if (id === "circle") {
           filled = r <= N * 0.46 && r >= N * 0.3;
         } else if (id === "diamond") {
@@ -929,38 +964,19 @@
     cycleT = 0;
   }
 
-  function drawPixelFrame(t) {
-    pipCtx.clearRect(0, 0, pipW, pipH);
+  function drawShapesFrame(t) {
     if (!pixelCells) return;
+    let progress, phase;
+    if (t < ASSEMBLE_S) { phase = "in"; progress = t / ASSEMBLE_S; }
+    else if (t < ASSEMBLE_S + HOLD_S) { phase = "hold"; progress = 1; }
+    else if (t < ASSEMBLE_S + HOLD_S + DISASSEMBLE_S) { phase = "out"; progress = 1 - (t - ASSEMBLE_S - HOLD_S) / DISASSEMBLE_S; }
+    else { phase = "gap"; progress = 0; }
 
-    let progress; // 0..1 sichtbarer Anteil, phase steuert Richtung
-    let phase;
-    if (t < ASSEMBLE_S) {
-      phase = "in";
-      progress = t / ASSEMBLE_S;
-    } else if (t < ASSEMBLE_S + HOLD_S) {
-      phase = "hold";
-      progress = 1;
-    } else if (t < ASSEMBLE_S + HOLD_S + DISASSEMBLE_S) {
-      phase = "out";
-      progress = 1 - (t - ASSEMBLE_S - HOLD_S) / DISASSEMBLE_S;
-    } else {
-      phase = "gap";
-      progress = 0;
-    }
-
-    const N = PIXEL_GRID;
-    const cell = (Math.min(pipW, pipH) * 0.82) / N;
-    const gridSize = cell * N;
-    const offX = (pipW - gridSize) / 2;
-    const offY = (pipH - gridSize) / 2;
+    const { cell, offX, offY } = pipGridMetrics(PIXEL_GRID);
     const pad = cell * 0.12;
-    const flyDist = cell * 9; // wie weit außerhalb der "Startpunkt" liegt
+    const flyDist = cell * 9;
 
     for (const c of pixelCells) {
-      // Beim Zusammensetzen kommt zuerst dran, wer nahe an der Einflugkante
-      // liegt (order klein); beim Auflösen fliegt zuerst wieder raus, wer
-      // zuletzt kam -> alles läuft zurück zum selben Rand.
       const localWindow = 0.1;
       let cellProgress;
       if (phase === "hold") cellProgress = 1;
@@ -970,9 +986,7 @@
         cellProgress = clampNum((progress - start) / localWindow, 0, 1);
       }
       if (cellProgress <= 0) continue;
-      const eased = cellProgress < 1
-        ? 1 - Math.pow(1 - cellProgress, 3) // ease-out: schnell rein, sanft einrasten
-        : 1;
+      const eased = cellProgress < 1 ? 1 - Math.pow(1 - cellProgress, 3) : 1;
 
       const targetX = offX + c.x * cell + cell / 2;
       const targetY = offY + c.y * cell + cell / 2;
@@ -991,16 +1005,193 @@
     }
   }
 
-  function clampNum(v, lo, hi) { return Math.max(lo, Math.min(hi, v)); }
+  // ===== Modus 2: Game of Life (selbst zeichnen, Nachbarn entscheiden) =====
+  const LIFE_GRID = 22;
+  const LIFE_STEP_S = 0.35;
+  let lifeCells = new Uint8Array(LIFE_GRID * LIFE_GRID);
+  let lifeStepAccum = 0;
+  let lifeEditing = false;
+  let lifePointerActive = false;
+  let lifeDrawValue = 1;
+
+  function seedLifeRandom() {
+    lifeCells = new Uint8Array(LIFE_GRID * LIFE_GRID);
+    for (let i = 0; i < lifeCells.length; i++) lifeCells[i] = Math.random() < 0.24 ? 1 : 0;
+    lifeStepAccum = 0;
+  }
+
+  function lifeStep() {
+    const N = LIFE_GRID;
+    const next = new Uint8Array(N * N);
+    let aliveCount = 0;
+    for (let y = 0; y < N; y++) {
+      for (let x = 0; x < N; x++) {
+        let n = 0;
+        for (let dy = -1; dy <= 1; dy++) {
+          for (let dx = -1; dx <= 1; dx++) {
+            if (dx === 0 && dy === 0) continue;
+            const nx = x + dx, ny = y + dy;
+            if (nx >= 0 && nx < N && ny >= 0 && ny < N && lifeCells[ny * N + nx]) n++;
+          }
+        }
+        const alive = lifeCells[y * N + x];
+        const willLive = alive ? (n === 2 || n === 3) : n === 3;
+        next[y * N + x] = willLive ? 1 : 0;
+        if (willLive) aliveCount++;
+      }
+    }
+    lifeCells = next;
+    if (aliveCount === 0) seedLifeRandom(); // endlos: bei Aussterben neu mischen
+  }
+
+  function drawLifeFrame(dt) {
+    if (!lifeEditing) {
+      lifeStepAccum += dt;
+      if (lifeStepAccum >= LIFE_STEP_S) { lifeStepAccum -= LIFE_STEP_S; lifeStep(); }
+    }
+    const N = LIFE_GRID;
+    const { cell, offX, offY } = pipGridMetrics(N);
+    const pad = Math.max(1, cell * 0.12);
+    for (let y = 0; y < N; y++) {
+      for (let x = 0; x < N; x++) {
+        if (!lifeCells[y * N + x]) continue;
+        const hue = 165 + 25 * Math.sin((x + y) * 0.35);
+        pipCtx.fillStyle = `hsl(${hue}, 75%, 58%)`;
+        pipCtx.fillRect(offX + x * cell + pad / 2, offY + y * cell + pad / 2, cell - pad, cell - pad);
+      }
+    }
+    if (lifeEditing) {
+      pipCtx.strokeStyle = "rgba(255,255,255,0.08)";
+      pipCtx.lineWidth = 1;
+      for (let i = 0; i <= N; i++) {
+        pipCtx.beginPath(); pipCtx.moveTo(offX + i * cell, offY); pipCtx.lineTo(offX + i * cell, offY + N * cell); pipCtx.stroke();
+        pipCtx.beginPath(); pipCtx.moveTo(offX, offY + i * cell); pipCtx.lineTo(offX + N * cell, offY + i * cell); pipCtx.stroke();
+      }
+    }
+  }
+
+  el.pipCanvas.addEventListener("pointerdown", (e) => {
+    if (pipMode !== "life" || !lifeEditing) return;
+    const cell = pipClientToGrid(e, LIFE_GRID);
+    if (!cell) return;
+    const idx = cell.y * LIFE_GRID + cell.x;
+    lifeDrawValue = lifeCells[idx] ? 0 : 1;
+    lifeCells[idx] = lifeDrawValue;
+    lifePointerActive = true;
+    e.preventDefault();
+  });
+  el.pipCanvas.addEventListener("pointermove", (e) => {
+    if (!lifePointerActive || pipMode !== "life" || !lifeEditing) return;
+    const cell = pipClientToGrid(e, LIFE_GRID);
+    if (!cell) return;
+    lifeCells[cell.y * LIFE_GRID + cell.x] = lifeDrawValue;
+  });
+  window.addEventListener("pointerup", () => { lifePointerActive = false; });
+
+  // ===== Modus 3: Sierpinski / Chaos-Game-Fraktale =====
+  const SIER_VARIANTS = [3, 4, 5];
+  const SIER_TOTAL_POINTS = 5000;
+  const SIER_POINTS_PER_FRAME = 20;
+  const SIER_HOLD_S = 2.2;
+  const SIER_FADE_S = 1.0;
+  let sierVariantIdx = 0;
+  let sierVertices = [];
+  let sierPoint = { x: 0, y: 0 };
+  let sierPrevVertex = -1;
+  let sierPointsDone = 0;
+  let sierPhase = "draw";
+  let sierPhaseT = 0;
+
+  function setupSierpinski(n) {
+    sierVariantIdx = SIER_VARIANTS.indexOf(n);
+    const cx = pipW / 2, cy = pipH / 2;
+    const R = Math.min(pipW, pipH) * 0.42;
+    sierVertices = [];
+    for (let i = 0; i < n; i++) {
+      const ang = -Math.PI / 2 + i * ((Math.PI * 2) / n);
+      sierVertices.push({ x: cx + R * Math.cos(ang), y: cy + R * Math.sin(ang) });
+    }
+    sierPoint = { x: cx, y: cy };
+    sierPrevVertex = -1;
+    sierPointsDone = 0;
+    sierPhase = "draw";
+    sierPhaseT = 0;
+    pipCtx.clearRect(0, 0, pipW, pipH);
+    el.pipLabel.textContent = `🔺 Fraktal (${n}-Eck)`;
+  }
+
+  function drawSierpinskiFrame(dt) {
+    if (sierPhase === "draw") {
+      const nv = sierVertices.length;
+      const ratio = nv === 5 ? 0.382 : 0.5;
+      for (let i = 0; i < SIER_POINTS_PER_FRAME; i++) {
+        let vi;
+        do { vi = Math.floor(Math.random() * nv); }
+        while (
+          sierPrevVertex !== -1 &&
+          ((nv === 4 && vi === sierPrevVertex) ||
+            (nv === 5 && Math.min(Math.abs(vi - sierPrevVertex), nv - Math.abs(vi - sierPrevVertex)) === 1))
+        );
+        sierPrevVertex = vi;
+        const v = sierVertices[vi];
+        sierPoint = { x: sierPoint.x + (v.x - sierPoint.x) * ratio, y: sierPoint.y + (v.y - sierPoint.y) * ratio };
+        const hue = (vi / sierVertices.length) * 300 + 20;
+        pipCtx.fillStyle = `hsla(${hue}, 85%, 65%, 0.85)`;
+        pipCtx.fillRect(sierPoint.x, sierPoint.y, 1.6, 1.6);
+        sierPointsDone++;
+        if (sierPointsDone >= SIER_TOTAL_POINTS) { sierPhase = "hold"; sierPhaseT = 0; break; }
+      }
+    } else if (sierPhase === "hold") {
+      sierPhaseT += dt;
+      if (sierPhaseT >= SIER_HOLD_S) { sierPhase = "fade"; sierPhaseT = 0; }
+    } else {
+      sierPhaseT += dt;
+      pipCtx.fillStyle = "rgba(11,11,18,0.22)";
+      pipCtx.fillRect(0, 0, pipW, pipH);
+      if (sierPhaseT >= SIER_FADE_S) {
+        setupSierpinski(SIER_VARIANTS[(sierVariantIdx + 1) % SIER_VARIANTS.length]);
+      }
+    }
+  }
+
+  // ===== Modus-Umschaltung + Haupt-Loop =====
+  function setPipMode(index) {
+    pipModeIndex = ((index % PIP_MODES.length) + PIP_MODES.length) % PIP_MODES.length;
+    pipMode = PIP_MODES[pipModeIndex];
+    pipCtx.clearRect(0, 0, pipW, pipH);
+    if (pipMode === "shapes") {
+      el.pipHint.textContent = "";
+      setPixelShape(pixelShapeIndex >= 0 ? pixelShapeIndex : 0);
+    } else if (pipMode === "life") {
+      lifeEditing = false;
+      seedLifeRandom();
+      el.pipLabel.textContent = "🧬 Game of Life";
+      el.pipHint.textContent = "⏸️ pausiert zum Selbstzeichnen (klicken/ziehen).";
+    } else if (pipMode === "sierpinski") {
+      el.pipHint.textContent = "";
+      setupSierpinski(SIER_VARIANTS[0]);
+    }
+    el.pipPause.textContent = "⏸️";
+    if (!pipRunning) startPip();
+  }
 
   function pipLoop(ts) {
     if (!pipRunning) return;
     if (!pipLastTs) pipLastTs = ts;
     const dt = Math.min((ts - pipLastTs) / 1000, 0.05);
     pipLastTs = ts;
-    cycleT += dt;
-    if (cycleT >= CYCLE_S) setPixelShape(pixelShapeIndex + 1);
-    drawPixelFrame(cycleT);
+
+    if (pipMode === "shapes") {
+      cycleT += dt;
+      if (cycleT >= CYCLE_S) setPixelShape(pixelShapeIndex + 1);
+      pipCtx.clearRect(0, 0, pipW, pipH);
+      drawShapesFrame(cycleT);
+    } else if (pipMode === "life") {
+      pipCtx.clearRect(0, 0, pipW, pipH);
+      drawLifeFrame(dt);
+    } else if (pipMode === "sierpinski") {
+      drawSierpinskiFrame(dt);
+    }
     pipRafId = requestAnimationFrame(pipLoop);
   }
 
@@ -1008,7 +1199,6 @@
     if (pipRafId) return;
     pipRunning = true;
     pipLastTs = 0;
-    el.pipPause.textContent = "⏸️";
     pipRafId = requestAnimationFrame(pipLoop);
   }
 
@@ -1016,27 +1206,45 @@
     pipRunning = false;
     if (pipRafId) cancelAnimationFrame(pipRafId);
     pipRafId = null;
-    el.pipPause.textContent = "▶️";
   }
 
+  el.pipMode.addEventListener("click", () => setPipMode(pipModeIndex + 1));
+
   el.pipShuffle.addEventListener("click", () => {
-    let next = Math.floor(Math.random() * PIXEL_SHAPES.length);
-    if (PIXEL_SHAPES.length > 1 && next === pixelShapeIndex) next = (next + 1) % PIXEL_SHAPES.length;
-    setPixelShape(next);
+    if (pipMode === "shapes") {
+      let next = Math.floor(Math.random() * PIXEL_SHAPES.length);
+      if (PIXEL_SHAPES.length > 1 && next === pixelShapeIndex) next = (next + 1) % PIXEL_SHAPES.length;
+      setPixelShape(next);
+    } else if (pipMode === "life") {
+      seedLifeRandom();
+    } else if (pipMode === "sierpinski") {
+      setupSierpinski(SIER_VARIANTS[(sierVariantIdx + 1) % SIER_VARIANTS.length]);
+    }
   });
 
   el.pipPause.addEventListener("click", () => {
-    if (pipRunning) stopPip();
-    else startPip();
+    if (pipMode === "life") {
+      lifeEditing = !lifeEditing;
+      el.pipPause.textContent = lifeEditing ? "▶️" : "⏸️";
+      el.pipHint.textContent = lifeEditing
+        ? "Zeichnen: klicken/ziehen. ▶️ startet die Simulation wieder."
+        : "⏸️ pausiert zum Selbstzeichnen (klicken/ziehen).";
+    } else if (pipRunning) {
+      stopPip();
+      el.pipPause.textContent = "▶️";
+    } else {
+      startPip();
+      el.pipPause.textContent = "⏸️";
+    }
   });
 
   document.addEventListener("visibilitychange", () => {
     if (document.hidden) stopPip();
-    else if (el.pipPause.textContent === "⏸️") startPip();
+    else if (el.pipPause.textContent !== "▶️" || pipMode === "life") startPip();
   });
 
   resizePipCanvas();
-  setPixelShape(0);
+  setPipMode(0);
   startPip();
 
   el.shareBtn.addEventListener("click", async () => {
@@ -1059,7 +1267,8 @@
     resizeConfettiCanvas();
     initStars();
     resizePipCanvas();
-    setPixelShape(pixelShapeIndex);
+    if (pipMode === "shapes") setPixelShape(pixelShapeIndex);
+    else if (pipMode === "sierpinski") setupSierpinski(SIER_VARIANTS[sierVariantIdx]);
   });
 
   // ---------- Init ----------

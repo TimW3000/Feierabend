@@ -81,7 +81,7 @@ img { max-width: 100%; }
   display: flex;
   flex-direction: column;
   align-items: center;
-  max-width: 960px;
+  max-width: 1320px;
   margin: 0 auto;
 }
 
@@ -93,15 +93,24 @@ img { max-width: 100%; }
   display: flex;
   flex-direction: column;
   gap: 18px;
+  order: 2;
 }
 
 .arcade-aside {
   width: 100%;
   max-width: 560px;
   padding: 0 18px 40px;
+  order: 3;
 }
 
-@media (min-width: 960px) {
+.pip-aside {
+  width: 100%;
+  max-width: 560px;
+  padding: 0 18px 20px;
+  order: 1;
+}
+
+@media (min-width: 1240px) {
   .page {
     flex-direction: row;
     align-items: flex-start;
@@ -109,6 +118,13 @@ img { max-width: 100%; }
     gap: 20px;
   }
   .app { margin: 0; }
+  .pip-aside {
+    flex: 0 0 290px;
+    max-width: 290px;
+    padding: 28px 0 40px;
+    position: sticky;
+    top: 20px;
+  }
   .arcade-aside {
     flex: 0 0 320px;
     max-width: 320px;
@@ -231,57 +247,27 @@ img { max-width: 100%; }
   filter: drop-shadow(0 0 10px rgba(180, 190, 255, 0.85));
 }
 
-/* --- Timer row + PiP dock --- */
-.timer-row {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  gap: 14px;
-  flex-wrap: wrap;
-}
-.timer-row .countdown-block {
-  width: 100%;
-}
-.timer-row .pip-dock {
-  align-self: center;
-  width: 170px;
-}
-
-@media (min-width: 520px) {
-  .timer-row {
-    flex-direction: row;
-    align-items: stretch;
-  }
-  .timer-row .countdown-block {
-    flex: 1 1 0;
-    min-width: 0;
-    width: auto;
-  }
-  .timer-row .pip-dock {
-    flex: 0 0 150px;
-    align-self: stretch;
-    width: 150px;
-  }
-}
-
+/* --- PiP dock (eigene linke Spalte, spiegelt die Arcade rechts) --- */
 .pip-dock {
   border: 1px solid var(--card-border);
-  border-radius: 14px;
+  border-radius: 18px;
   background: var(--chip-bg);
   overflow: hidden;
   display: flex;
   flex-direction: column;
-  transition: max-width 0.3s ease, flex-basis 0.3s ease;
+  backdrop-filter: blur(22px);
+  -webkit-backdrop-filter: blur(22px);
+  box-shadow: var(--shadow);
 }
 .pip-dock .pip-header {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  padding: 5px 8px;
-  font-size: 0.68rem;
+  padding: 10px 12px;
+  font-size: 0.78rem;
   font-weight: 700;
   color: var(--text-2);
-  letter-spacing: 0.03em;
+  letter-spacing: 0.02em;
 }
 .pip-header-actions {
   display: flex;
@@ -291,25 +277,36 @@ img { max-width: 100%; }
   border: none;
   background: transparent;
   cursor: pointer;
-  font-size: 0.8rem;
+  font-size: 0.95rem;
   color: var(--text-muted);
-  padding: 2px 4px;
+  padding: 4px 6px;
   line-height: 1;
   border-radius: 6px;
 }
-.pip-icon-btn:hover { color: var(--text-1); background: var(--chip-bg); }
+.pip-icon-btn:hover { color: var(--text-1); background: var(--card-border); }
+.pip-icon-btn.active { color: var(--accent); }
 
 .pip-body {
-  flex: 1;
   position: relative;
-  aspect-ratio: 9 / 16;
+  aspect-ratio: 1 / 1;
   background: #0b0b12;
   overflow: hidden;
+  touch-action: none;
+  cursor: crosshair;
 }
 #pipCanvas {
   width: 100%;
   height: 100%;
   display: block;
+}
+
+.pip-hint {
+  font-size: 0.68rem;
+  color: var(--text-muted);
+  text-align: center;
+  padding: 8px 10px;
+  min-height: 1.4em;
+  line-height: 1.4;
 }
 
 /* --- Countdown --- */
