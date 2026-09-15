@@ -16,12 +16,14 @@
     progressRunner: document.getElementById("progressRunner"),
     progressDoor: document.getElementById("progressDoor"),
     coffeeStat: document.getElementById("coffeeStat"),
+    funFact: document.getElementById("funFact"),
     feierabendTime: document.getElementById("feierabendTime"),
     quote: document.getElementById("quote"),
     liveClock: document.getElementById("liveClock"),
     themeToggle: document.getElementById("themeToggle"),
     soundToggle: document.getElementById("soundToggle"),
     shareBtn: document.getElementById("shareBtn"),
+    chaosBtn: document.getElementById("chaosBtn"),
     scene: document.getElementById("scene"),
     sunMoon: document.getElementById("sunMoon"),
     overtimeBox: document.getElementById("overtimeBox"),
@@ -131,29 +133,119 @@
       "Der Tag hat gerade erst begonnen. Kaffee bereit? ☕",
       "Ruhig bleiben, das wird schon. Noch ein langer Weg. 🌅",
       "Erstmal ankommen – der Rest kommt von allein. 🐢",
+      "Montag-Energie, auch wenn heute vielleicht gar kein Montag ist. 🫠",
+      "Dein Gehirn lädt noch. Bitte etwas Geduld. 🔄",
+      "Rizz-Level: niedrig. Kaffee-Level: wird erhöht. ☕📈",
+      "Die Arbeit ruft. Du ignorierst sie noch kurz. 🙈",
+      "Ganz ruhig, wir sind noch im Vorspann. 🎬",
+      "Motivation: geladen. Akku: 12%. 🔋",
+      "Du schaffst das. Oder auch nicht. Aber du schaffst das. 💅",
+      "Kein Stress, der Tag ist ein Marathon, kein Sprint. Außer zur Kaffeemaschine. 🏃☕",
+      "Buchstäblich gerade erst angekommen und schon Feierabend-Gedanken? Same. 🫡",
+      "Fun Fact: du hast heute noch alles vor dir. Auch die Fehler. 😅",
+      "Innerer Monolog: 'Ich schaff das easy.' Auch innerer Monolog: 'Wann ist Mittag?' 🍽️",
+      "Skibidi-Start ins Büro-Universum. 🚽👑",
+      "Deine To-Do-Liste guckt dich schon komisch an. 👀",
+      "Noch ist alles möglich. Auch ein produktiver Tag. Theoretisch. 📈",
+      "Die Sonne ist wach. Du bist... so semi. ☀️😴",
+      "Early Game: sammle XP, vermeide Meeting-Bosse. 🎮",
+      "Dein Kaffee ist heißer als deine Motivation gerade. ☕🔥",
+      "Der Grind hat begonnen. Möge er gnädig sein. 🙏",
+      "Noch total main character, gleich schon NPC im Meeting. 🎭",
     ],
     mid: [
       "Halbzeit-Gefühl. Weiter geht's. 🚶",
       "Ein Fuß vor den anderen – Feierabend rückt näher. 🕰️",
       "Zeit für eine kurze Tagtraum-Pause vom Sofa. 🛋️",
       "Noch ein bisschen durchhalten, du schaffst das. 💪",
+      "Konzentration: 60%. Gedanken ans Mittagessen: 100%. 🍜",
+      "Mid-Tag-Krise: kurz, aber intensiv. 🎢",
+      "Du bist offiziell in der 'Wann-ist-das-hier-vorbei'-Zone. ⏳",
+      "Dein Stuhl kennt dich mittlerweile beim Vornamen. 🪑",
+      "Guck einfach hoch, du weißt schon warum. 👆",
+      "Brain.exe hat aufgehört zu reagieren. Neustart empfohlen. 💻",
+      "Halbzeitpfiff! Wechsel: mehr Kaffee rein. ☕🔄",
+      "Deine Motivation macht gerade Kaffeepause. Ohne dich. ☕🚶",
+      "Slay trotzdem weiter, auch wenn's grad zäh ist. 💅",
+      "POV: Du checkst zum 5. Mal die Uhr in dieser Stunde. 🕐",
+      "Der Tag ist wie eine Achterbahn. Gerade sind wir oben. Vielleicht. 🎢",
+      "Fun Fact: Prokrastination ist auch eine Form von Zeitmanagement. Behaupte ich einfach mal. 📊",
+      "Dein Energielevel: Emoji-Batterie bei 40%. 🔋",
+      "Weiter im Text, der Nachmittag wartet nicht auf sich selbst. 📖",
+      "Mid-Day-Ick: noch so viele E-Mails, so wenig Bock. 📧",
+      "Du bist quasi ein Halbzeit-Held. Applaus für dich. 👏",
+      "Zeit vergeht schneller, wenn man nicht auf die Uhr starrt. Starr trotzdem. 👁️",
+      "Kleine Pause, große Wirkung. Vielleicht. 🧘",
+      "Brainrot-Level steigt exponentiell mit jeder Stunde im Büro. 📈🧠",
+      "Halb geschafft, halb am Verzweifeln, ganz normal. 🙃",
     ],
     late: [
       "Es riecht schon nach Feierabend! 👃",
       "Fast geschafft – nicht nachlassen. 🚀",
       "Der Endspurt hat begonnen. 🏁",
       "Laptop zu, Leben an – bald ist es so weit. 💻➡️🎉",
+      "Deine innere Stimme schreit schon 'FEIERABEND'. 📢",
+      "Rizz steigt, Energie steigt, Bock auf Meetings sinkt. 📉",
+      "Du kannst den Ausgang schon fast riechen. 🏃‍♂️💨",
+      "Letzte Meile. Kein Zurück mehr. 🛣️",
+      "Deine Tasse ist leer, aber dein Wille ist voll. Fast. ☕",
+      "Noch kurz durchhalten, dann Main Character Energy für den Feierabend. ✨",
+      "Der Countdown läuft heißer als deine Kaffeemaschine. 🔥☕",
+      "Fast im Endgame. Boss: die letzte E-Mail. 🎮",
+      "Deine Produktivität macht schon den Mantel an. 🧥",
+      "Bald: Bildschirm aus, Serotonin an. 📺❌➡️😌",
+      "Letzter Push, dann ist Schicht im Schacht. ⛏️",
+      "Dein Stuhl fängt schon an, dich loszulassen. 🪑👋",
+      "Der Feierabend blinkt schon am Horizont wie ein Notification-Badge. 🔴",
+      "Kurz vorm Ziel – Beine (und Hirn) zusammenreißen. 🦵🧠",
+      "So nah und doch so fern. Aber eher nah. 🌆",
+      "Deine To-Do-Liste hat noch 2 Punkte. Deine Laune hat noch 0 Geduld. 😤",
+      "Fast-Feierabend-Modus aktiviert. Ladebalken bei 90%. 🔋",
+      "Fühlt sich an wie der letzte Kilometer eines Marathons, den keiner gefragt hat. 🏃",
+      "Dein Gehirn checkt schon aus, dein Körper sitzt noch da. 🧠💨",
+      "Bald heißt's: Tür zu, Kopf frei. 🚪🧘",
     ],
     almost: [
       "Gleich ist Schluss – halt durch! 🔥",
       "Countdown läuft, die letzten Minuten zählen. ⏳",
       "So nah dran – nicht mehr abschweifen! 👀",
+      "Die letzten Minuten fühlen sich an wie Stunden. Klassiker. 🐌",
+      "Feierabend ist in Sichtweite wie ein Ping auf Google Maps. 📍",
+      "Dein Finger schwebt schon über dem Ausschalt-Knopf. 👆",
+      "Letzte Sekunden – bloß jetzt keine neue E-Mail öffnen. 📧🙅",
+      "Almost there. Halt die Spannung wie in nem Cliffhanger. 🎬",
+      "Dein Mantel hängt schon bereit am Stuhl. 🧥",
+      "Die Uhr tickt lauter als sonst. Oder bildest du dir das ein? 👂",
+      "Gänsehaut-Moment: gleich ist es soweit. 🥶",
+      "Noch kurz die Zähne zusammenbeißen, dann ist Ruhe. 🦷",
+      "Dein Boss-Fight gegen die Zeit geht in die letzte Runde. ⚔️",
+      "Fast durch – letzter Boss: die Verabschiedungsrunde im Büro. 👋",
+      "So kurz vorm Ziel und trotzdem fühlt sich jede Minute nach 10 an. ⏱️",
+      "Feierabend-Vorfreude: Stufe Maximum erreicht. 📈",
+      "Gleich heißt's: raus hier, Kopf frei, Serie an. 📺",
+      "Letzter Blick auf die Uhr, dann ist es geschafft. 👁️🕐",
+      "Fast im Ziel-Bereich – bitte nicht stolpern. 🏃‍♀️",
+      "Kurz vorm Abpfiff. Bleib fokussiert, Champion. 🏆",
     ],
     done: [
       "Feierabend! Zeit, den Laptop zuzuklappen. 🎉",
       "Geschafft! Auf geht's ins Wochenende oder aufs Sofa. 🛋️",
       "Well done. Jetzt heißt es: abschalten. 🌙",
       "Offiziell im Feierabend-Modus. Genieß es! 🍻",
+      "Main Character Energy: jetzt aktiviert. ✨",
+      "Du hast es geschafft. Serotonin-Ausschüttung: läuft. 😌",
+      "Feierabend erreicht. Hirn: im Flugmodus. ✈️",
+      "Zeit für das wichtigste Meeting des Tages: mit dir selbst und der Couch. 🛋️",
+      "Level Up! Du hast den Arbeitstag besiegt. 🏆",
+      "Ab jetzt zählt nur noch: Chillen, Snacken, Nichtstun. 🍟😌",
+      "Feierabend-Gong hat geläutet. Bitte lauter Applaus für dich selbst. 👏",
+      "Deine Verantwortung für heute: offiziell beendet. ✅",
+      "Zeit, das Gehirn in den Ruhemodus zu schicken. 🧠💤",
+      "Geschafft, Legende. Bis morgen (leider). 🫡",
+      "Von jetzt an gehört die Zeit wieder dir. 🕊️",
+      "Ab in den Feierabend-Flow. Kein Zurück mehr. 🌊",
+      "Du bist raus. Genieß den Rest vom Tag. 🚪✨",
+      "Feierabend: erreicht, gefeiert, verdient. 🥳",
     ],
   };
 
@@ -194,7 +286,58 @@
 
   setInterval(() => {
     if (lastQuoteBucket) setQuoteText(pickQuote(lastQuoteBucket));
-  }, 25000);
+  }, 60000);
+
+  // ---------- Fun Facts (drumherum-Fakten, unabhängig vom Fortschritt) ----------
+  const FUN_FACTS = [
+    "Fun Fact: Ein Arbeitstag fühlt sich mindestens 3x länger an, als er wirklich ist. Wissenschaftlich nicht belegt, gefühlt aber 100% korrekt.",
+    "Wusstest du? Die Kaffeemaschine im Büro hat wahrscheinlich mehr soziale Kontakte als du heute.",
+    "Fakt: 87% aller Gedanken im Büro drehen sich ums Mittagessen. Die restlichen 13% ums Wochenende.",
+    "Studien zeigen (keine echten): Die letzte Arbeitsstunde vor Feierabend dauert gefühlt so lang wie die ersten sieben zusammen.",
+    "Fun Fact: Dein Stuhl hat wahrscheinlich schon mehr Meetings überlebt als du.",
+    "Wissenschaftlich fragwürdig, aber wahr: Uhren im Büro laufen gefühlt langsamer als Uhren zuhause.",
+    "Fakt: Die Sekunde, in der man auf die Uhr schaut, vergeht garantiert am langsamsten.",
+    "Fun Fact: Brainrot ist keine Krankheit, sondern ein Lifestyle.",
+    "Wusstest du? 'Kurz noch was checken' hat schon so manche Konzentration ruiniert.",
+    "Fakt: Jede zweite Kaffeepause endet in einer viel zu langen Konversation über nichts.",
+    "Fun Fact: Die durchschnittliche Aufmerksamkeitsspanne nach dem Mittagessen liegt bei ca. 4 Sekunden.",
+    "Studien (erfunden) zeigen: Montage fühlen sich an wie ein persönlicher Angriff.",
+    "Fakt: Dein Gehirn hat um 15 Uhr offiziell Feierabend, dein Körper sitzt aber noch bis später.",
+    "Fun Fact: Multitasking bedeutet meistens, mehrere Dinge gleichzeitig schlecht zu machen.",
+    "Wusstest du? Der Legende nach hat noch niemand freiwillig ein komplettes Meeting-Protokoll gelesen.",
+    "Fakt: Die besten Ideen kommen angeblich unter der Dusche. Nicht im Büro. Nie im Büro.",
+    "Fun Fact: 'Ich schau nur kurz aufs Handy' ist die gefährlichste Lüge, die man sich selbst erzählt.",
+    "Wissenschaftlich nicht bewiesen: Die letzte halbe Stunde vor Feierabend hat eigene Zeitgesetze.",
+    "Fakt: Snacks im Büro verschwinden schneller, als jedes Meeting endet.",
+    "Fun Fact: Man kann Motivation nicht kaufen. Kaffee schon. Fast dasselbe.",
+    "Wusstest du? Der Impuls, die Uhrzeit zu checken, wird stärker, je näher der Feierabend rückt.",
+    "Fakt: 'Nur noch schnell diese eine Mail' hat schon viele Feierabende um 20 Minuten verschoben.",
+    "Fun Fact: Innerlich schreien zählt nicht als Pause, ist aber trotzdem wichtig.",
+    "Wissenschaftlich fragwürdig: Freitage vergehen gefühlt in Lichtgeschwindigkeit.",
+    "Fakt: Der Bürostuhl-Squeak ist offiziell die inoffizielle Hymne jedes Büros.",
+    "Fun Fact: 'Kurz brainstormen' dauert nie kurz.",
+    "Wusstest du? Die Zeit zwischen 'gleich ist Feierabend' und tatsächlichem Feierabend fühlt sich wie eine eigene Zeitzone an.",
+    "Fakt: Niemand liest komplette Rundmails. Niemand. Auch du nicht.",
+    "Fun Fact: Dein Energielevel korreliert exakt mit deinem Kaffeestand. Zufall? Wohl kaum.",
+    "Wissenschaftlich nicht belegt: Meetings, die 'kurz' angekündigt werden, sind nie kurz.",
+    "Fakt: Der Impuls, kurz vorm Feierabend nochmal aufzuräumen, ist Prokrastination in Tarnung.",
+    "Fun Fact: Brainrot-Content schaut man sich nie 'nur kurz' an.",
+    "Wusstest du? Statistisch gesehen denkst du gerade öfter an Feierabend als an diese Statistik.",
+  ];
+
+  let lastFactIndex = -1;
+  function updateFunFact() {
+    let idx = Math.floor(Math.random() * FUN_FACTS.length);
+    if (idx === lastFactIndex && FUN_FACTS.length > 1) idx = (idx + 1) % FUN_FACTS.length;
+    lastFactIndex = idx;
+    el.funFact.classList.add("fade");
+    setTimeout(() => {
+      el.funFact.textContent = FUN_FACTS[idx];
+      el.funFact.classList.remove("fade");
+    }, 200);
+  }
+  updateFunFact();
+  setInterval(updateFunFact, 45000);
 
   // ---------- Toast ----------
   let toastTimer = null;
@@ -233,16 +376,49 @@
     el.progressDoor.classList.toggle("open", done);
   }
 
-  // ---------- Party easter egg ----------
-  let keyBuffer = "";
-  window.addEventListener("keydown", (e) => {
-    if (e.key.length !== 1) return;
-    keyBuffer = (keyBuffer + e.key.toLowerCase()).slice(-5);
-    if (keyBuffer === "party") {
-      spawnConfetti(260, Math.random() * 0.6 + 0.2, 0.1);
-      showToast("🥳 Party-Modus aktiviert!");
-      playChime();
+  // ---------- Chaos-Modus ----------
+  const CHAOS_MESSAGES = [
+    "🌀 CHAOS-MODUS AKTIVIERT. Hirn wird neu gestartet...",
+    "💀 Brainrot-Level: MAXIMUM erreicht.",
+    "🤡 Alle Regeln pausiert. Für die nächsten Sekunden zählt nur Chaos.",
+    "🫠 Realität wird kurz neu geladen...",
+    "🎉 Zufälliger Konfetti-Angriff gestartet.",
+    "👽 Außerirdische Energie freigesetzt.",
+    "🔥 System überhitzt vor lauter Vibes.",
+    "🧠💨 Gehirnzellen machen kurz Pause.",
+    "🫡 Respekt für diesen Klick.",
+    "🚨 Alarm: zu viel Spaß erkannt.",
+  ];
+  const RAIN_EMOJIS = ["💀", "🤡", "🫠", "👽", "🔥", "✨", "🎉", "🧠", "🌀", "🫡", "👾", "🎈"];
+
+  function spawnEmojiRain(count = 40) {
+    for (let i = 0; i < count; i++) {
+      const span = document.createElement("span");
+      span.className = "emoji-rain-item";
+      span.textContent = RAIN_EMOJIS[Math.floor(Math.random() * RAIN_EMOJIS.length)];
+      span.style.left = `${Math.random() * 100}vw`;
+      span.style.fontSize = `${1.2 + Math.random() * 1.6}rem`;
+      const duration = 2.4 + Math.random() * 2.2;
+      span.style.animationDuration = `${duration}s`;
+      span.style.animationDelay = `${Math.random() * 0.4}s`;
+      document.body.appendChild(span);
+      setTimeout(() => span.remove(), (duration + 0.5) * 1000);
     }
+  }
+
+  el.chaosBtn.addEventListener("click", () => {
+    document.body.classList.remove("chaos");
+    void document.body.offsetWidth;
+    document.body.classList.add("chaos");
+    const card = document.querySelector(".card");
+    card.classList.remove("shake");
+    void card.offsetWidth;
+    card.classList.add("shake");
+    spawnEmojiRain(45);
+    spawnConfetti(120, Math.random() * 0.6 + 0.2, 0.1);
+    showToast(CHAOS_MESSAGES[Math.floor(Math.random() * CHAOS_MESSAGES.length)]);
+    playChime();
+    setTimeout(() => document.body.classList.remove("chaos"), 2600);
   });
 
   // ---------- Sun / sky scene ----------

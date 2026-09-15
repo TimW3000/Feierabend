@@ -15,9 +15,13 @@ und Pause.
 - Sternenhimmel & Mond, sobald Feierabend erreicht ist
 - Konfetti-Regen und Sound-Signal beim Erreichen des Feierabends
 - "Kaffeepausen-Zähler" als kleine Spielerei unter dem Countdown
-- Party-Easter-Egg: einfach `party` tippen für eine Konfetti-Überraschung
 - Überstunden-Anzeige, sobald die geplante Zeit überschritten ist
-- Rotierende, launige Sprüche je nach Tagesfortschritt
+- Über 100 rotierende, launige/absurde Sprüche (wechseln jede Minute), plus
+  ein separater "Fun Fact"-Ticker mit ca. 30 unnützen Büro-Wahrheiten
+- 🌀 Chaos-Button: Emoji-Regen, Farb-Verzerrung, Konfetti und ein zufälliger
+  Chaos-Spruch auf einen Klick
+- 🧠💀 "Brainrot-Pause": Direktlinks zu TikTok, YouTube Shorts und Instagram
+  Reels für die kurze Gehirn-aus-Pause zwischendurch
 - Arbeitsbeginn frei editierbar (Zeit-Eingabe, ±15-Minuten-Buttons oder "Jetzt")
 - Schnellauswahl-Chips für Arbeitszeiten (6h–8,5h, inkl. 7,8h = 7h48min) und Pausen
 - Dark/Light-Mode (startet mit Systemeinstellung)
