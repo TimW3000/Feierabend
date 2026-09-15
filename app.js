@@ -810,13 +810,15 @@
     if (state.soundOn) playChime();
   });
 
-  // ---------- Ambient-Animationen (statt Video-Embedding) ----------
-  // Läuft komplett lokal ohne Netzwerk – kein TikTok/YouTube-Verlass nötig.
+  // ---------- Pixel-Art-Loop (statt Video-Embedding) ----------
+  // Läuft komplett lokal ohne Netzwerk. Ein Pixel-Motiv setzt sich nach und
+  // nach zusammen, hält kurz, löst sich wieder auf (zurück zum leeren
+  // Startpunkt) und macht so Platz für das nächste Motiv – endlos, nahtlos.
   const pipCtx = el.pipCanvas.getContext("2d");
   let pipW = 0, pipH = 0, pipDpr = 1;
   let pipRunning = true;
-  let pipT = 0;
   let pipRafId = null;
+  let pipLastTs = 0;
 
   function resizePipCanvas() {
     const rect = el.pipBody.getBoundingClientRect();
@@ -828,156 +830,161 @@
     pipCtx.setTransform(pipDpr, 0, 0, pipDpr, 0, 0);
   }
 
-  const AMBIENT_STYLES = [
-    {
-      id: "lava",
-      label: "🌋 Lava",
-      blobs: null,
-      init() {
-        this.blobs = Array.from({ length: 5 }, (_, i) => ({
-          hue: [280, 320, 190, 40, 150][i],
-          rx: 0.25 + Math.random() * 0.15,
-          ry: 0.25 + Math.random() * 0.15,
-          speedX: 0.15 + Math.random() * 0.15,
-          speedY: 0.12 + Math.random() * 0.18,
-          phaseX: Math.random() * Math.PI * 2,
-          phaseY: Math.random() * Math.PI * 2,
-          r: 0.28 + Math.random() * 0.14,
-        }));
-      },
-      draw(ctx, w, h, t) {
-        ctx.fillStyle = "rgba(6, 4, 16, 0.18)";
-        ctx.fillRect(0, 0, w, h);
-        ctx.globalCompositeOperation = "lighter";
-        for (const b of this.blobs) {
-          const cx = w * (0.5 + b.rx * Math.sin(t * b.speedX + b.phaseX));
-          const cy = h * (0.5 + b.ry * Math.cos(t * b.speedY + b.phaseY));
-          const r = Math.min(w, h) * b.r;
-          const g = ctx.createRadialGradient(cx, cy, 0, cx, cy, r);
-          g.addColorStop(0, `hsla(${b.hue}, 90%, 60%, 0.55)`);
-          g.addColorStop(1, `hsla(${b.hue}, 90%, 50%, 0)`);
-          ctx.fillStyle = g;
-          ctx.beginPath();
-          ctx.arc(cx, cy, r, 0, Math.PI * 2);
-          ctx.fill();
-        }
-        ctx.globalCompositeOperation = "source-over";
-      },
-    },
-    {
-      id: "warp",
-      label: "🌌 Warp",
-      stars: null,
-      init(w, h) {
-        this.stars = Array.from({ length: 140 }, () => this.spawnStar(w, h));
-      },
-      spawnStar(w, h) {
-        return {
-          x: (Math.random() - 0.5) * w,
-          y: (Math.random() - 0.5) * h,
-          z: Math.random() * w,
-        };
-      },
-      draw(ctx, w, h) {
-        ctx.fillStyle = "rgba(4, 2, 12, 0.35)";
-        ctx.fillRect(0, 0, w, h);
-        const cx = w / 2, cy = h / 2;
-        ctx.strokeStyle = "#9be8ff";
-        for (const s of this.stars) {
-          s.z -= 6;
-          if (s.z <= 1) Object.assign(s, this.spawnStar(w, h), { z: w });
-          const k = w / s.z;
-          const x = cx + s.x * k;
-          const y = cy + s.y * k;
-          const pk = w / (s.z + 10);
-          const px = cx + s.x * pk;
-          const py = cy + s.y * pk;
-          if (x < 0 || x > w || y < 0 || y > h) continue;
-          const size = Math.max(0.5, (1 - s.z / w) * 2.4);
-          ctx.globalAlpha = Math.min(1, (1 - s.z / w) * 1.4);
-          ctx.lineWidth = size;
-          ctx.beginPath();
-          ctx.moveTo(px, py);
-          ctx.lineTo(x, y);
-          ctx.stroke();
-        }
-        ctx.globalAlpha = 1;
-      },
-    },
-    {
-      id: "matrix",
-      label: "🟩 Matrix",
-      cols: null,
-      chars: "アイウエオカキクケコサシスセソ01",
-      init(w) {
-        const fontSize = 12;
-        const colCount = Math.ceil(w / fontSize);
-        this.fontSize = fontSize;
-        this.cols = Array.from({ length: colCount }, () => Math.random() * -40);
-      },
-      draw(ctx, w, h) {
-        ctx.fillStyle = "rgba(4, 10, 4, 0.22)";
-        ctx.fillRect(0, 0, w, h);
-        ctx.font = `${this.fontSize}px monospace`;
-        for (let i = 0; i < this.cols.length; i++) {
-          const x = i * this.fontSize;
-          const y = this.cols[i] * this.fontSize;
-          const ch = this.chars[Math.floor(Math.random() * this.chars.length)];
-          ctx.fillStyle = "#c9ffce";
-          ctx.fillText(ch, x, y);
-          ctx.fillStyle = "#22c55e";
-          ctx.fillText(ch, x, y - this.fontSize);
-          this.cols[i] += 0.5 + Math.random() * 0.4;
-          if (y > h && Math.random() > 0.975) this.cols[i] = 0;
-        }
-      },
-    },
-    {
-      id: "aurora",
-      label: "🌈 Aurora",
-      draw(ctx, w, h, t) {
-        ctx.fillStyle = "rgba(4, 4, 14, 0.25)";
-        ctx.fillRect(0, 0, w, h);
-        const bands = 4;
-        for (let i = 0; i < bands; i++) {
-          const hue = (t * 12 + i * 70) % 360;
-          ctx.strokeStyle = `hsla(${hue}, 85%, 65%, 0.55)`;
-          ctx.lineWidth = 2 + i;
-          ctx.beginPath();
-          for (let x = 0; x <= w; x += 6) {
-            const y =
-              h * (0.3 + i * 0.15) +
-              Math.sin(x * 0.02 + t * (0.6 + i * 0.15) + i) * (h * 0.08) +
-              Math.sin(x * 0.008 - t * 0.3 + i * 2) * (h * 0.05);
-            if (x === 0) ctx.moveTo(x, y);
-            else ctx.lineTo(x, y);
-          }
-          ctx.stroke();
-        }
-      },
-    },
+  const PIXEL_GRID = 16;
+  const PIXEL_SHAPES = [
+    { id: "star", label: "⭐ Stern", hue: 46 },
+    { id: "heart", label: "❤️ Herz", hue: 345 },
+    { id: "circle", label: "⭕ Ring", hue: 190 },
+    { id: "diamond", label: "🔶 Raute", hue: 265 },
+    { id: "cross", label: "➕ Kreuz", hue: 130 },
+    { id: "door", label: "🚪 Tür", hue: 25 },
   ];
 
-  let pipStyleIndex = 0;
-  let pipStyle = null;
-
-  function setPipStyle(index) {
-    pipStyleIndex = ((index % AMBIENT_STYLES.length) + AMBIENT_STYLES.length) % AMBIENT_STYLES.length;
-    pipStyle = AMBIENT_STYLES[pipStyleIndex];
-    if (pipStyle.init) pipStyle.init(pipW, pipH);
-    el.pipLabel.textContent = pipStyle.label;
+  function buildShapeMask(id) {
+    const N = PIXEL_GRID;
+    const cx = (N - 1) / 2, cy = (N - 1) / 2;
+    const mask = [];
+    for (let y = 0; y < N; y++) {
+      for (let x = 0; x < N; x++) {
+        const dx = x - cx, dy = y - cy;
+        const r = Math.sqrt(dx * dx + dy * dy);
+        let filled = false;
+        if (id === "star") {
+          const ang = Math.atan2(dy, dx) + Math.PI * 2.5;
+          const spikes = 5;
+          const seg = (Math.PI * 2) / spikes;
+          const a = (ang % seg) - seg / 2;
+          const outer = N * 0.47, inner = N * 0.21;
+          const edge = inner + (outer - inner) * (1 - Math.abs(a) / (seg / 2));
+          filled = r <= edge;
+        } else if (id === "heart") {
+          const hx = dx / (N * 0.5);
+          const hy = -dy / (N * 0.46) - 0.3;
+          const val = Math.pow(hx * hx + hy * hy - 1, 3) - hx * hx * hy * hy * hy;
+          filled = val <= 0;
+        } else if (id === "circle") {
+          filled = r <= N * 0.46 && r >= N * 0.3;
+        } else if (id === "diamond") {
+          filled = Math.abs(dx) + Math.abs(dy) <= N * 0.46;
+        } else if (id === "cross") {
+          const armX = Math.abs(dx) <= N * 0.13 && Math.abs(dy) <= N * 0.42;
+          const armY = Math.abs(dy) <= N * 0.13 && Math.abs(dx) <= N * 0.42;
+          filled = armX || armY;
+        } else if (id === "door") {
+          const inFrame = x >= N * 0.26 && x <= N * 0.74 && y >= N * 0.1 && y <= N * 0.92;
+          const inHollow = x >= N * 0.33 && x <= N * 0.67 && y >= N * 0.18 && y <= N * 0.84;
+          const knob = Math.hypot(x - N * 0.6, y - N * 0.52) <= 0.9;
+          filled = (inFrame && !inHollow) || knob;
+        }
+        mask.push(filled);
+      }
+    }
+    return mask;
   }
+
+  // Reihenfolge, in der die Pixel erscheinen: von der Mitte nach außen,
+  // mit etwas Zufalls-Jitter, damit es organisch statt starr wirkt.
+  function buildRevealOrder(mask) {
+    const N = PIXEL_GRID;
+    const cx = (N - 1) / 2, cy = (N - 1) / 2;
+    const cells = [];
+    for (let y = 0; y < N; y++) {
+      for (let x = 0; x < N; x++) {
+        const i = y * N + x;
+        if (!mask[i]) continue;
+        const dist = Math.hypot(x - cx, y - cy) + Math.random() * 1.6;
+        cells.push({ x, y, dist });
+      }
+    }
+    cells.sort((a, b) => a.dist - b.dist);
+    const maxDist = cells.length ? cells[cells.length - 1].dist : 1;
+    cells.forEach((c, i) => { c.order = maxDist > 0 ? c.dist / maxDist : 0; });
+    return cells;
+  }
+
+  const ASSEMBLE_S = 2.0, HOLD_S = 1.3, DISASSEMBLE_S = 1.5, GAP_S = 0.3;
+  const CYCLE_S = ASSEMBLE_S + HOLD_S + DISASSEMBLE_S + GAP_S;
+
+  let pixelShapeIndex = -1;
+  let pixelCells = null;
+  let pixelHue = 0;
+  let cycleT = 0;
+
+  function setPixelShape(index) {
+    pixelShapeIndex = ((index % PIXEL_SHAPES.length) + PIXEL_SHAPES.length) % PIXEL_SHAPES.length;
+    const shape = PIXEL_SHAPES[pixelShapeIndex];
+    pixelCells = buildRevealOrder(buildShapeMask(shape.id));
+    pixelHue = shape.hue;
+    el.pipLabel.textContent = shape.label;
+    cycleT = 0;
+  }
+
+  function drawPixelFrame(t) {
+    pipCtx.clearRect(0, 0, pipW, pipH);
+    if (!pixelCells) return;
+
+    let progress; // 0..1 sichtbarer Anteil, phase steuert Richtung
+    let phase;
+    if (t < ASSEMBLE_S) {
+      phase = "in";
+      progress = t / ASSEMBLE_S;
+    } else if (t < ASSEMBLE_S + HOLD_S) {
+      phase = "hold";
+      progress = 1;
+    } else if (t < ASSEMBLE_S + HOLD_S + DISASSEMBLE_S) {
+      phase = "out";
+      progress = 1 - (t - ASSEMBLE_S - HOLD_S) / DISASSEMBLE_S;
+    } else {
+      phase = "gap";
+      progress = 0;
+    }
+
+    const N = PIXEL_GRID;
+    const cell = (Math.min(pipW, pipH) * 0.82) / N;
+    const gridSize = cell * N;
+    const offX = (pipW - gridSize) / 2;
+    const offY = (pipH - gridSize) / 2;
+    const pad = cell * 0.12;
+
+    for (const c of pixelCells) {
+      // Beim Zusammensetzen wächst von innen (order klein) nach außen;
+      // beim Auflösen verschwindet zuerst außen -> zurück zur Mitte.
+      const localWindow = 0.22;
+      let cellProgress;
+      if (phase === "hold") cellProgress = 1;
+      else if (phase === "gap") cellProgress = 0;
+      else {
+        const start = c.order * (1 - localWindow);
+        cellProgress = clampNum((progress - start) / localWindow, 0, 1);
+      }
+      if (cellProgress <= 0) continue;
+      const eased = cellProgress * cellProgress * (3 - 2 * cellProgress);
+      const size = (cell - pad) * (0.35 + 0.65 * eased);
+      const x = offX + c.x * cell + (cell - size) / 2;
+      const y = offY + c.y * cell + (cell - size) / 2;
+      const lightness = 55 + 10 * Math.sin(t * 2 + c.x * 0.4 + c.y * 0.3);
+      pipCtx.fillStyle = `hsla(${pixelHue}, 85%, ${lightness}%, ${0.55 + 0.45 * eased})`;
+      pipCtx.fillRect(x, y, size, size);
+    }
+  }
+
+  function clampNum(v, lo, hi) { return Math.max(lo, Math.min(hi, v)); }
 
   function pipLoop(ts) {
     if (!pipRunning) return;
-    pipT = ts / 1000;
-    pipStyle.draw(pipCtx, pipW, pipH, pipT);
+    if (!pipLastTs) pipLastTs = ts;
+    const dt = Math.min((ts - pipLastTs) / 1000, 0.05);
+    pipLastTs = ts;
+    cycleT += dt;
+    if (cycleT >= CYCLE_S) setPixelShape(pixelShapeIndex + 1);
+    drawPixelFrame(cycleT);
     pipRafId = requestAnimationFrame(pipLoop);
   }
 
   function startPip() {
     if (pipRafId) return;
     pipRunning = true;
+    pipLastTs = 0;
     el.pipPause.textContent = "⏸️";
     pipRafId = requestAnimationFrame(pipLoop);
   }
@@ -990,9 +997,9 @@
   }
 
   el.pipShuffle.addEventListener("click", () => {
-    let next = Math.floor(Math.random() * AMBIENT_STYLES.length);
-    if (AMBIENT_STYLES.length > 1 && next === pipStyleIndex) next = (next + 1) % AMBIENT_STYLES.length;
-    setPipStyle(next);
+    let next = Math.floor(Math.random() * PIXEL_SHAPES.length);
+    if (PIXEL_SHAPES.length > 1 && next === pixelShapeIndex) next = (next + 1) % PIXEL_SHAPES.length;
+    setPixelShape(next);
   });
 
   el.pipPause.addEventListener("click", () => {
@@ -1006,7 +1013,7 @@
   });
 
   resizePipCanvas();
-  setPipStyle(Math.floor(Math.random() * AMBIENT_STYLES.length));
+  setPixelShape(0);
   startPip();
 
   el.shareBtn.addEventListener("click", async () => {
@@ -1029,7 +1036,7 @@
     resizeConfettiCanvas();
     initStars();
     resizePipCanvas();
-    setPipStyle(pipStyleIndex);
+    setPixelShape(pixelShapeIndex);
   });
 
   // ---------- Init ----------

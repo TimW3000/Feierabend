@@ -1,12 +1,117 @@
 /* ============================================================
    MINI-ARCADE — schlanke Runtime für die Feierabend-Wartezeit.
-   Angepasst aus TimW3000/Fakten-Website (Neon Arcade): ohne
-   Firebase-Leaderboard, ohne externe Fonts, ohne localStorage —
-   Bestwerte gelten nur für die aktuelle Sitzung.
+   Angepasst aus TimW3000/Fakten-Website (Neon Arcade): gleiche
+   Firebase-Leaderboard-Datenbank wie das Original (Scores landen
+   in derselben globalen Rangliste), aber ohne externe Fonts und
+   ohne localStorage. Firebase wird asynchron nachgeladen, damit
+   ein blockiertes/langsames Netzwerk (z.B. Firmen-Firewall) die
+   Spiele selbst nie verzögert oder blockiert — ohne Verbindung
+   läuft alles einfach im Offline-Modus (nur lokaler Highscore).
    Jedes Spiel registriert sich über Arcade.registerGame({...}).
    ============================================================ */
 (function () {
   "use strict";
+
+  /* ---------- Firebase-Leaderboard (asynchron, mit Fallback) ---------- */
+  const firebaseConfig = {
+    apiKey: "AIzaSyDV_JiF7JuHUtrwXRuiNCLodJh_NamRwFQ",
+    authDomain: "fakten-website.firebaseapp.com",
+    databaseURL: "https://fakten-website-default-rtdb.europe-west1.firebasedatabase.app",
+    projectId: "fakten-website",
+    storageBucket: "fakten-website.firebasestorage.app",
+    messagingSenderId: "489067963407"
+  };
+
+  let db = null;
+  let firebaseEnabled = false;
+  let leaderboardRef = null;
+  let pendingLeaderboardGameId = null;
+
+  function setDbStatus(text) {
+    const elDb = document.getElementById("arcadeDbStatus");
+    if (elDb) elDb.textContent = text;
+  }
+
+  function escapeHtml(str) {
+    const d = document.createElement("div");
+    d.textContent = str;
+    return d.innerHTML;
+  }
+
+  function renderLeaderboard(entries) {
+    const list = document.getElementById("arcadeLeaderboardList");
+    if (!list) return;
+    list.innerHTML = "";
+    if (!entries.length) {
+      list.innerHTML = '<li class="arcade-leaderboard-empty">Noch keine Einträge — sei der Erste.</li>';
+      return;
+    }
+    entries.forEach(function (entry, i) {
+      const li = document.createElement("li");
+      li.innerHTML =
+        '<span class="arcade-rank">' + (i + 1) + '.</span>' +
+        '<span class="arcade-name">' + escapeHtml(entry.name || "???") + '</span>' +
+        '<span class="arcade-points">' + entry.score + '</span>';
+      list.appendChild(li);
+    });
+  }
+
+  function watchLeaderboard(gameId) {
+    pendingLeaderboardGameId = gameId;
+    if (leaderboardRef) leaderboardRef.off();
+    if (!firebaseEnabled) {
+      setDbStatus("Offline-Modus — nur lokaler Highscore.");
+      renderLeaderboard([]);
+      return;
+    }
+    leaderboardRef = db.ref("leaderboard/" + gameId).orderByChild("score").limitToLast(10);
+    leaderboardRef.on("value", function (snap) {
+      const entries = [];
+      snap.forEach(function (child) { entries.push(child.val()); });
+      entries.sort(function (a, b) { return b.score - a.score; });
+      renderLeaderboard(entries);
+      setDbStatus("Verbunden — globale Bestenliste live.");
+    }, function () {
+      setDbStatus("Server nicht erreichbar — nur lokaler Highscore.");
+      renderLeaderboard([]);
+    });
+  }
+
+  function submitScore(gameId, name, score) {
+    if (!firebaseEnabled) return;
+    db.ref("leaderboard/" + gameId).push({ name: name, score: score, ts: Date.now() });
+  }
+
+  function initFirebase() {
+    try {
+      if (typeof firebase === "undefined") throw new Error("firebase global fehlt");
+      firebase.initializeApp(firebaseConfig);
+      db = firebase.database();
+      firebaseEnabled = true;
+      if (pendingLeaderboardGameId) watchLeaderboard(pendingLeaderboardGameId);
+      else setDbStatus("Verbunden.");
+    } catch (e) {
+      firebaseEnabled = false;
+      setDbStatus("Server nicht erreichbar — nur lokaler Highscore.");
+    }
+  }
+
+  function loadFirebaseAsync() {
+    setDbStatus("Verbinde mit Server…");
+    const s1 = document.createElement("script");
+    s1.src = "https://www.gstatic.com/firebasejs/10.13.0/firebase-app-compat.js";
+    s1.async = true;
+    s1.onload = function () {
+      const s2 = document.createElement("script");
+      s2.src = "https://www.gstatic.com/firebasejs/10.13.0/firebase-database-compat.js";
+      s2.async = true;
+      s2.onload = initFirebase;
+      s2.onerror = function () { setDbStatus("Server nicht erreichbar — nur lokaler Highscore."); };
+      document.head.appendChild(s2);
+    };
+    s1.onerror = function () { setDbStatus("Server nicht erreichbar — nur lokaler Highscore."); };
+    document.head.appendChild(s1);
+  }
 
   /* ---------- Theme (nur für diese Sitzung, kein Speichern) ---------- */
   const THEMES = {
@@ -116,6 +221,9 @@
   const gameOverBackBtn = document.getElementById("arcadeGameOverBackBtn");
   const resumeBtn = document.getElementById("arcadeResumeBtn");
   const themeToggleBtn = document.getElementById("arcadeThemeToggle");
+  const highscoreForm = document.getElementById("arcadeHighscoreForm");
+  const initialsInput = document.getElementById("arcadeInitials");
+  const submitScoreBtn = document.getElementById("arcadeSubmitScoreBtn");
 
   const games = {};
   const gameOrder = [];
@@ -181,6 +289,7 @@
     startDesc.innerHTML = activeGame.description;
     startControls.textContent = activeGame.controlsHint;
     startBtn.textContent = activeGame.startLabel || "Starten";
+    watchLeaderboard(id);
     if (activeGame.onLoad) activeGame.onLoad();
     ctx.clearRect(0, 0, canvas.width, canvas.height);
     showOnly(startOverlay);
@@ -232,6 +341,8 @@
     }
     setHud("best", best);
     showOnly(gameOverOverlay);
+    if (highscoreForm) highscoreForm.style.display = "flex";
+    if (initialsInput) { initialsInput.value = ""; initialsInput.focus(); }
   }
 
   function pauseRun() {
@@ -281,6 +392,21 @@
 
   if (themeToggleBtn) themeToggleBtn.addEventListener("click", toggleTheme);
 
+  function submitWithName(rawName) {
+    const name = (rawName || "???").trim().toUpperCase().slice(0, 3) || "???";
+    submitScore(activeGame.id, name, currentScore);
+    if (highscoreForm) highscoreForm.style.display = "none";
+  }
+
+  if (submitScoreBtn) {
+    submitScoreBtn.addEventListener("click", function () {
+      submitWithName(initialsInput ? initialsInput.value : "");
+    });
+  }
+  document.querySelectorAll(".arcade-quick-name-btn").forEach(function (btn) {
+    btn.addEventListener("click", function () { submitWithName(btn.dataset.name); });
+  });
+
   window.Arcade = {
     registerGame: registerGame,
     setHud: setHud,
@@ -299,6 +425,7 @@
       applyThemeAttr();
       buildHub();
       showOnly(hubOverlay);
+      loadFirebaseAsync();
     }
   };
 })();

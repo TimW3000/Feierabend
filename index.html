@@ -161,6 +161,18 @@
           <h2>Run beendet</h2>
           <p class="arcade-final-score">Score: <b id="arcadeFinalScore">0</b></p>
           <p class="arcade-personal-best" id="arcadePersonalBest"></p>
+          <div class="arcade-highscore-form" id="arcadeHighscoreForm">
+            <label>Wer spielt? (ein Klick trägt direkt ein)</label>
+            <div class="arcade-quick-names" id="arcadeQuickNames">
+              <button type="button" class="arcade-quick-name-btn" data-name="Tim">Tim</button>
+              <button type="button" class="arcade-quick-name-btn" data-name="Calvin">Calvin</button>
+            </div>
+            <label for="arcadeInitials">oder Kürzel eintippen</label>
+            <div class="arcade-highscore-row">
+              <input id="arcadeInitials" maxlength="3" placeholder="ABC" autocomplete="off">
+              <button id="arcadeSubmitScoreBtn" class="arcade-btn small" type="button">Eintragen</button>
+            </div>
+          </div>
           <button id="arcadeRestartBtn" class="arcade-btn" type="button">Nochmal spielen</button>
           <button id="arcadeGameOverBackBtn" class="arcade-text-btn" type="button">Zurück zur Auswahl</button>
         </div>
@@ -171,7 +183,13 @@
         </div>
       </div>
 
-      <div class="arcade-footer-hint">Bestwerte gelten nur für diese Sitzung – kein Speichern, wie der Rest der Seite.</div>
+      <aside class="arcade-leaderboard">
+        <h3>🏆 Bestenliste</h3>
+        <ol id="arcadeLeaderboardList" class="arcade-leaderboard-list"></ol>
+        <p id="arcadeDbStatus" class="arcade-status-banner">Verbinde mit Server&hellip;</p>
+      </aside>
+
+      <div class="arcade-footer-hint">Global-Highscores teilen sich mit der Neon-Arcade-Bestenliste – sonst speichert diese Seite nichts.</div>
     </section>
   </aside>
   </div>
